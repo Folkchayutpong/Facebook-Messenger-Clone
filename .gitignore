@@ -1,0 +1,18 @@
+# React client
+/frontend/node_modules
+/frontend/build
+/frontend/.env
+
+# Express server
+/backend/node_modules
+/backend/.env
+/backend/logs
+/backend/coverage
+/backend/dist
+
+# Common
+*.log
+.DS_Store
+.env
+.vscode/
+.idea/
