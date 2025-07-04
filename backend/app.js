@@ -6,10 +6,12 @@ const app = express();
 
 //setup cors middleware
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "http://localhost:8080",
 };
 
 //use middleware
+app.use(express.urlencoded());
+app.use(express.json());
 app.use(cors(corsOptions));
 
 module.exports = app;
