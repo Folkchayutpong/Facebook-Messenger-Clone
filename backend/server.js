@@ -1,26 +1,26 @@
 const path = require("path");
 const app = require("./app");
 const http = require("http");
+const userRoute = require("./modules/user/user.route");
 require("dotenv").config({ path: "./config/.env" });
-const mongoose = require("mongoose");
+require("./config/db");
 
 const port = process.env.PORT || 3000;
 
 //create server
 const server = http.createServer(app);
 
-// conect to mongodb
-try {
-  mongoose.connect("mongodb://localhost:27017/mydb");
-  console.log("Connected to MongoDB");
-} catch (e) {
-  console.log(e);
-}
+//route
+app.use("api/user", userRoute);
 
-//test route
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+//TODO: add other routes
+
+
+
+
+
+
+
 
 //start server
 server.listen(port, async () => {
