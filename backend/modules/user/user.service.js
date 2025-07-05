@@ -3,8 +3,7 @@ const argon2 = require("argon2");
 
 async function registerService(email, username, password) {
   try {
-    const existing = await User.findOne({ username: email });
-
+    const existing = await User.findOne({ email: email });
     if (existing) {
       throw new Error("User already exists");
     }
@@ -12,6 +11,7 @@ async function registerService(email, username, password) {
     const passwordHash = await argon2.hash(password);
 
     const user = new User({
+      email: email,
       username: username,
       password: passwordHash,
     });
@@ -25,7 +25,7 @@ async function registerService(email, username, password) {
 
 async function loginService(email, password) {
   try {
-    const user = await User.findOne({ username: email }).lean().exec();
+    const user = await User.findOne({ email: email });
 
     if (!user) {
       throw new Error("User not found");
