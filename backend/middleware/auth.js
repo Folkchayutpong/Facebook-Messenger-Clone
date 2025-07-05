@@ -1,10 +1,12 @@
 require("dotenv").config({ path: "./config/.env" });
 const jwt = require("jsonwebtoken");
 const { redisClient } = require("../config/redis");
+const { parseTokenFromCookie } = require("../utils/utils");
 
 //authentication middleware
 const socketAuthMiddleware = async (socket, next) => {
-  const token = socket.handshake.auth.token;
+  const token = parseTokenFromCookie(socket.handshake.headers?.cookie);
+  console.log(token);
   if (!token) return next(new Error("Missing token"));
 
   try {
