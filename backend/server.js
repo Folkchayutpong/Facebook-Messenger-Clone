@@ -1,28 +1,24 @@
-const path = require("path");
-const app = require("./app");
-const http = require("http");
 require("dotenv").config({ path: "./config/.env" });
-const mongoose = require("mongoose");
+const { app, initSocket } = require("./app");
+const http = require("http");
+const userRoute = require("./modules/user/user.route");
+const conectDB = require("./config/db");
+const { connectRedis } = require("./config/redis");
 
 const port = process.env.PORT || 3000;
 
 //create server
 const server = http.createServer(app);
 
-// conect to mongodb
-try {
-  mongoose.connect("mongodb://localhost:27017/mydb");
-  console.log("Connected to MongoDB");
-} catch (e) {
-  console.log(e);
-}
+//route
+app.use("/api/user", userRoute);
 
-//test route
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+//TODO: add other routes
 
 //start server
 server.listen(port, async () => {
+  await conectDB();
+  await connectRedis();
+  initSocket(server);
   console.log(`Server is running on port ${port}`);
 });
