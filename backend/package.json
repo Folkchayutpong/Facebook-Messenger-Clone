@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js localhost 5000"
+    "dev": "nodemon --legacy-watch server.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +16,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.1",
+    "redis": "^5.5.6",
+    "socket.io": "^4.8.1",
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
