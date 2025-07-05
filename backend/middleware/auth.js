@@ -1,23 +1,26 @@
-const jwt = require("jsonwebtoken");
 require("dotenv").config({ path: "./config/.env" });
+const jwt = require("jsonwebtoken");
+const { redisClient } = require("../config/redis");
 
 //authentication middleware
-function authenticationToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+const socketAuthMiddleware = async (socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) return next(new Error("Missing token"));
 
-  if (token == null) {
-    return res.sendStatus(401).json({ message: "Unauthorized" });
-  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const redisKey = `token:${decoded.id}`;
+    const stored = await redisClient.get(redisKey);
 
-  //TODO: implements redis
-  jwt.verify(token, process.env.JWT_TOKEN, (err, user) => {
-    if (err) {
-      return res.sendStatus(403).json({ message: "Forbidden" });
+    if (!stored || stored !== token) {
+      return next(new Error("Invalid or expired token"));
     }
-    req.user = user;
-    next();
-  });
-}
 
-module.exports = authenticationToken;
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    next(new Error("Unauthorized"));
+  }
+};
+
+module.exports = socketAuthMiddleware;
