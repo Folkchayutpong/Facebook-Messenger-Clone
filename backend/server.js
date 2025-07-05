@@ -19,6 +19,6 @@ app.use("/api/user", userRoute);
 server.listen(port, async () => {
   await conectDB();
   await connectRedis();
-  await initSocket(server);
+  initSocket(server);
   console.log(`Server is running on port ${port}`);
 });
