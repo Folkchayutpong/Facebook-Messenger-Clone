@@ -1,8 +1,9 @@
-const app = require("./app");
+require("dotenv").config({ path: "./config/.env" });
+const { app, initSocket } = require("./app");
 const http = require("http");
 const userRoute = require("./modules/user/user.route");
 const conectDB = require("./config/db");
-require("dotenv").config({ path: "./config/.env" });
+const { connectRedis } = require("./config/redis");
 
 const port = process.env.PORT || 3000;
 
@@ -17,5 +18,7 @@ app.use("/api/user", userRoute);
 //start server
 server.listen(port, async () => {
   await conectDB();
+  await connectRedis();
+  await initSocket(server);
   console.log(`Server is running on port ${port}`);
 });
