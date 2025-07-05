@@ -1,6 +1,7 @@
 const zxcvbn = require("zxcvbn");
 const userService = require("./user.service");
-const generateAccessToken = require("../../utils/utils");
+const utils = require("../../utils/utils");
+const { redisClient } = require("../../config/redis");
 
 async function register(req, res) {
   const { email, username, password } = req.body;
@@ -43,8 +44,18 @@ async function login(req, res) {
 
   try {
     const user = await userService.loginService(email, password);
-    const token = generateAccessToken(user.id, user.email);
-    res.status(201).json(user);
+    const token = utils.generateAccessToken(user.id, user.email);
+    //TODO: implements redis
+    const redisKey = `token:${user.id}`;
+    await redisClient.set(redisKey, token);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, //change to true if use https
+      sameSite: "Strict",
+      maxAge: 60 * 60 * 1000,
+    });
+    res.status(200).json({ user: user });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
