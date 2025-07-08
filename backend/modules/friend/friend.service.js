@@ -59,10 +59,10 @@ async function removeService(ownerId, targetId) {
     const oldTargetCount = targetList.friends.length;
 
     ownerList.friends = ownerList.friends.filter(
-      (id) => id.toString() !== targetId
+      (id) => id.toString() !== targetId.toString()
     );
     targetList.friends = targetList.friends.filter(
-      (id) => id.toString() !== ownerId
+      (id) => id.toString() !== ownerId.toString()
     );
 
     if (
@@ -90,10 +90,10 @@ async function acceptService(ownerId, requesterId) {
     if (!ownerList || !requesterList) throw new Error("Friend list not found");
 
     ownerList.inbound = ownerList.inbound.filter(
-      (id) => id.toString() !== requesterId
+      (id) => id.toString() !== requesterId.toString()
     );
     requesterList.outbound = requesterList.outbound.filter(
-      (id) => id.toString() !== ownerId
+      (id) => id.toString() !== ownerId.toString()
     );
 
     if (!ownerList.friends.includes(requesterId)) {
@@ -121,10 +121,10 @@ async function declineService(ownerId, requesterId) {
     if (!ownerList || !requesterList) throw new Error("Friend list not found");
 
     ownerList.inbound = ownerList.inbound.filter(
-      (id) => id.toString() !== requesterId
+      (id) => id.toString() !== requesterId.toString()
     );
     requesterList.outbound = requesterList.outbound.filter(
-      (id) => id.toString() !== ownerId
+      (id) => id.toString() !== ownerId.toString()
     );
     await Promise.all([ownerList.save(), requesterList.save()]);
 
