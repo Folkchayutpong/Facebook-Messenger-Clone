@@ -12,6 +12,7 @@ const server = http.createServer(app);
 
 //route
 app.use("/api/user", userRoute);
+app.use("/api/friend", userRoute);
 
 //TODO: add other routes
 
