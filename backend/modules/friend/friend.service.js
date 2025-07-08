@@ -24,6 +24,42 @@ async function addService(ownerId, targetId) {
   }
 }
 
+async function removeService(ownerId, targetId) {
+  try {
+    if (ownerId === targetId) throw new Error("Cannot unfriend yourself");
+
+    const [ownerList, targetList] = await Promise.all([
+      FriendList.findOne({ owner: ownerId }),
+      FriendList.findOne({ owner: targetId }),
+    ]);
+
+    if (!ownerList || !targetList) throw new Error("Friend list not found");
+
+    const oldOwnerCount = ownerList.friends.length;
+    const oldTargetCount = targetList.friends.length;
+
+    ownerList.friends = ownerList.friends.filter(
+      (id) => id.toString() !== targetId
+    );
+    targetList.friends = targetList.friends.filter(
+      (id) => id.toString() !== ownerId
+    );
+
+    if (
+      ownerList.friends.length === oldOwnerCount &&
+      targetList.friends.length === oldTargetCount
+    ) {
+      return { message: "Users were not friends" };
+    }
+
+    await Promise.all([ownerList.save(), targetList.save()]);
+
+    return { message: "Friend removed" };
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}
+
 async function acceptService(ownerId, requesterId) {
   try {
     const [ownerList, requesterList] = await Promise.all([
@@ -68,44 +104,9 @@ async function declineService(ownerId, requesterId) {
     );
     await Promise.all([ownerList.save(), requesterList.save()]);
 
-    return { message: "Friend request rejected" };
+    return { message: "Friend request declined" };
   } catch (error) {
     throw new Error(error.message);
   }
 }
 
-async function removefriendService(ownerId, targetId) {
-  try {
-    if (ownerId === targetId) throw new Error("Cannot unfriend yourself");
-
-    const [ownerList, targetList] = await Promise.all([
-      FriendList.findOne({ owner: ownerId }),
-      FriendList.findOne({ owner: targetId }),
-    ]);
-
-    if (!ownerList || !targetList) throw new Error("Friend list not found");
-
-    const oldOwnerCount = ownerList.friends.length;
-    const oldTargetCount = targetList.friends.length;
-
-    ownerList.friends = ownerList.friends.filter(
-      (id) => id.toString() !== targetId
-    );
-    targetList.friends = targetList.friends.filter(
-      (id) => id.toString() !== ownerId
-    );
-
-    if (
-      ownerList.friends.length === oldOwnerCount &&
-      targetList.friends.length === oldTargetCount
-    ) {
-      return { message: "Users were not friends" };
-    }
-
-    await Promise.all([ownerList.save(), targetList.save()]);
-
-    return { message: "Friend removed" };
-  } catch (error) {
-    throw new Error(error.message);
-  }
-}
