@@ -22,3 +22,5 @@ server.listen(port, async () => {
   initSocket(server);
   console.log(`Server is running on port ${port}`);
 });
+
+module.exports = server;
