@@ -1,16 +1,36 @@
 const FriendList = require("./friend.model");
 
+async function ensureFriendList(userId) {
+  let list = await FriendList.findOne({ owner: userId });
+  if (!list) {
+    list = new FriendList({
+      owner: userId,
+      friends: [],
+      inbound: [],
+      outbound: [],
+    });
+    await list.save();
+  }
+  return list;
+}
+
 async function addService(ownerId, targetId) {
   try {
     const [ownerList, targetList] = await Promise.all([
-      FriendList.findOne({ owner: ownerId }),
-      FriendList.findOne({ owner: targetId }),
+      ensureFriendList(ownerId),
+      ensureFriendList(targetId),
     ]);
 
     if (!ownerList || !targetList) throw new Error("Friend list not found");
 
     if (ownerList.friends.includes(targetId)) {
       throw new Error("Already friends");
+    }
+    if (ownerList.outbound.includes(targetId)) {
+      throw new Error("Friend request already sent");
+    }
+    if (targetList.inbound.includes(ownerId)) {
+      throw new Error("Friend request already received");
     }
 
     ownerList.outbound.push(targetId);
@@ -29,8 +49,8 @@ async function removeService(ownerId, targetId) {
     if (ownerId === targetId) throw new Error("Cannot unfriend yourself");
 
     const [ownerList, targetList] = await Promise.all([
-      FriendList.findOne({ owner: ownerId }),
-      FriendList.findOne({ owner: targetId }),
+      ensureFriendList(ownerId),
+      ensureFriendList(targetId),
     ]);
 
     if (!ownerList || !targetList) throw new Error("Friend list not found");
@@ -63,8 +83,8 @@ async function removeService(ownerId, targetId) {
 async function acceptService(ownerId, requesterId) {
   try {
     const [ownerList, requesterList] = await Promise.all([
-      FriendList.findOne({ owner: ownerId }),
-      FriendList.findOne({ owner: requesterId }),
+      ensureFriendList(ownerId),
+      ensureFriendList(requesterId),
     ]);
 
     if (!ownerList || !requesterList) throw new Error("Friend list not found");
@@ -76,8 +96,12 @@ async function acceptService(ownerId, requesterId) {
       (id) => id.toString() !== ownerId
     );
 
-    ownerList.friends.push(requesterId);
-    requesterList.friends.push(ownerId);
+    if (!ownerList.friends.includes(requesterId)) {
+      ownerList.friends.push(requesterId);
+    }
+    if (!requesterList.friends.includes(ownerId)) {
+      requesterList.friends.push(ownerId);
+    }
 
     await Promise.all([ownerList.save(), requesterList.save()]);
 
@@ -90,8 +114,8 @@ async function acceptService(ownerId, requesterId) {
 async function declineService(ownerId, requesterId) {
   try {
     const [ownerList, requesterList] = await Promise.all([
-      FriendList.findOne({ owner: ownerId }),
-      FriendList.findOne({ owner: requesterId }),
+      ensureFriendList(ownerId),
+      ensureFriendList(requesterId),
     ]);
 
     if (!ownerList || !requesterList) throw new Error("Friend list not found");
@@ -110,3 +134,9 @@ async function declineService(ownerId, requesterId) {
   }
 }
 
+module.exports = {
+  addService,
+  removeService,
+  acceptService,
+  declineService,
+};
