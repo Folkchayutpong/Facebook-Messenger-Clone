@@ -15,12 +15,13 @@ async function add(req, res) {
    }
 
   try {
-    const ownerObjId = new ObjectId("686d03258637257dbee1f501");
+    const ownerObjId = new ObjectId(ownerId);
     const targetObjId = new ObjectId(targetId);
     console.log(ownerObjId, targetObjId);
     const result = await friendService.addService(ownerObjId, targetObjId);
     res.status(200).json(result);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 }
@@ -38,7 +39,7 @@ async function remove(req, res) {
    }
 
   try {
-    const ownerObjId = new ObjectId("686d03258637257dbee1f501");
+    const ownerObjId = new ObjectId(ownerId);
     const targetObjId = new ObjectId(targetId);
     const result = await friendService.removeService(ownerObjId, targetObjId);
     res.status(200).json(result);
@@ -60,7 +61,7 @@ async function accept(req, res) {
    }
 
   try {
-    const ownerObjId = new ObjectId("686d033c8637257dbee1f505");
+    const ownerObjId = new ObjectId(ownerId);
     const requesterObjId = new ObjectId(requesterId);
     const result = await friendService.acceptService(ownerObjId, requesterObjId);
     res.status(200).json(result);
@@ -82,7 +83,7 @@ async function decline(req, res) {
    }
 
   try {
-    const ownerObjId = new ObjectId("686d033c8637257dbee1f505");
+    const ownerObjId = new ObjectId(ownerId);
     const requesterObjId = new ObjectId(requesterId);
     const result = await friendService.declineService(ownerObjId, requesterObjId);
     res.status(200).json(result);
