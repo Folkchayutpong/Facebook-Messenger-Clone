@@ -1,4 +1,5 @@
 const FriendList = require("./friend.model");
+const eventBus = require("../events/eventBus");
 
 async function ensureFriendList(userId) {
   let list = await FriendList.findOne({ owner: userId });
@@ -104,6 +105,12 @@ async function acceptService(ownerId, requesterId) {
     }
 
     await Promise.all([ownerList.save(), requesterList.save()]);
+
+    //send event to create chat
+    eventBus.emit("CreatePrivateChatService", {
+      senderId: ownerId,
+      receiverId: targetId,
+    });
 
     return { message: "Friend request accepted" };
   } catch (error) {
