@@ -1,21 +1,26 @@
-const { default: mongoose } = require("mongoose");
-const moongoose = require("mongoose");
+const { Types, mongoose } = require("mongoose");
 
-const chatsSchema = moongoose.Schema({
+const chatsSchema = mongoose.Schema({
   name: {
     type: String,
     required: [true, "Please add a name"],
     minLength: 2,
-    maxLength: 20,
+    maxLength: 100,
   },
   members: {
-    type: Array,
+    type: [Types.ObjectId],
+    ref: "User",
     required: [true, "Please add members"],
   },
   type: {
     type: String,
     required: true,
     enum: ["private", "group"],
+  },
+  admins: {
+    type: [Types.ObjectId],
+    ref: "User",
+    required: true,
   },
 });
 
