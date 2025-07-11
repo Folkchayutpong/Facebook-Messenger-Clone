@@ -109,7 +109,7 @@ async function acceptService(ownerId, requesterId) {
     //send event to create chat
     eventBus.emit("CreatePrivateChatService", {
       senderId: ownerId,
-      receiverId: targetId,
+      receiverId: requesterId,
     });
 
     return { message: "Friend request accepted" };
