@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { Server } = require("socket.io");
+const cookieParser = require("cookie-parser");
 const socketAuthMiddleware = require("./middleware/auth");
 
 //setup express
@@ -13,6 +14,7 @@ const corsOptions = {
 
 //use middleware
 app.use(express.urlencoded());
+app.use(cookieParser());
 app.use(express.json());
 app.use(cors(corsOptions));
 
