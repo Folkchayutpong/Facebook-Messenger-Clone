@@ -1,6 +1,10 @@
 const request = require("supertest");
+delete process.env.PORT;
+process.env.PORT = 6000;
 const server = require("../../server");
 const userService = require("./user.service");
+const utils = require("../../utils/utils");
+const userController = require("./user.controller");
 const jwt = require("jsonwebtoken");
 const { redisClient } = require("../../config/redis");
 const zxcvbn = require("zxcvbn");
@@ -124,21 +128,51 @@ describe("POST /api/user/login", () => {
     username: "testuser",
   });
 
-  it("should login a user", async () => {
-    userService.loginService.mockResolvedValue({
-      email: "testlogin@example.com",
+  it("should login successfully and return user object", async () => {
+    const mockUser = {
+      id: "507f1f77bcf86cd799439011",
+      email: "test@example.com",
       username: "testuser",
-      Token: "mockedToken",
-    });
+    };
 
-    const res = await request(server).post("/api/user/login").send({
-      email: "testlogin@example.com",
-      password: "testpassword",
-    });
+    const req = {
+      body: {
+        email: "test@example.com",
+        password: "password123",
+      },
+    };
 
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty("Token");
-    expect(res.body).toHaveProperty("username", "testuser");
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+      cookie: jest.fn(),
+    };
+
+    userService.loginService = jest.fn().mockResolvedValue(mockUser);
+    utils.generateAccessToken = jest.fn().mockReturnValue("mockedToken");
+    redisClient.set = jest.fn().mockResolvedValue();
+
+    await userController.login(req, res);
+
+    expect(userService.loginService).toHaveBeenCalledWith(
+      "test@example.com",
+      "password123"
+    );
+    expect(utils.generateAccessToken).toHaveBeenCalledWith(
+      mockUser.id,
+      mockUser.email
+    );
+    expect(redisClient.set).toHaveBeenCalledWith(
+      `token:${mockUser.id}`,
+      "mockedToken"
+    );
+    expect(res.cookie).toHaveBeenCalledWith(
+      "token",
+      "mockedToken",
+      expect.any(Object)
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ user: mockUser });
   });
 
   it("should return 400 if email is invalid", async () => {
