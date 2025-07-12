@@ -1,4 +1,5 @@
 const FriendList = require("./friend.model");
+const eventBus = require("../events/eventBus");
 
 async function ensureFriendList(userId) {
   let list = await FriendList.findOne({ owner: userId });
@@ -72,6 +73,11 @@ async function removeService(ownerId, targetId) {
       return { message: "Users were not friends" };
     }
 
+    eventBus.emit("RemovePrivateChatService", {
+      senderId: ownerId,
+      receiverId: targetId,
+    });
+
     await Promise.all([ownerList.save(), targetList.save()]);
 
     return { message: "Friend removed" };
@@ -104,6 +110,12 @@ async function acceptService(ownerId, requesterId) {
     }
 
     await Promise.all([ownerList.save(), requesterList.save()]);
+
+    //send event to create chat
+    eventBus.emit("CreatePrivateChatService", {
+      senderId: ownerId,
+      receiverId: requesterId,
+    });
 
     return { message: "Friend request accepted" };
   } catch (error) {

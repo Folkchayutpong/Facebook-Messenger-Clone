@@ -3,6 +3,7 @@ const { app, initSocket } = require("./app");
 const http = require("http");
 const userRoute = require("./modules/user/user.route");
 const friendRoute = require("./modules/friend/friend.route");
+const chatRoute = require("./modules/chat/chat.route");
 const conectDB = require("./config/db");
 const { connectRedis } = require("./config/redis");
 
@@ -14,6 +15,7 @@ const server = http.createServer(app);
 //route
 app.use("/api/user", userRoute);
 app.use("/api/friend", friendRoute);
+app.use("/api/chats", chatRoute);
 
 //TODO: add other routes
 
