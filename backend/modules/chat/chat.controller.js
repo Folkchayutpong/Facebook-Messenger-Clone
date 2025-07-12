@@ -54,7 +54,7 @@ async function GetChats(req, res) {
 
 async function UpdateChat(req, res) {
   const id = req.params.id;
-  const { newName, addMembers, removeMembers, addAdmin, removeAdmin } =
+  const { newName, add_Members, remove_Members, add_Admin, remove_Admin } =
     req.body;
 
   if (!id) {
@@ -67,50 +67,72 @@ async function UpdateChat(req, res) {
       return res.status(403).json({ message: "You are not an admin" });
     }
 
-    const results = [];
-
-    // Rename
+    // Rename chat
     if (newName) {
-      const renameResult = await chatService.renameChat(id, newName);
-      results.push({ action: "rename", result: renameResult });
+      try {
+        await chatService.renameChat(id, newName);
+      } catch (err) {
+        console.error("Error renaming chat:", err);
+        return res
+          .status(500)
+          .json({ message: "Failed to rename chat", error: err.message });
+      }
     }
 
     // Add members
-    if (Array.isArray(addMembers) && addMembers.length > 0) {
-      const addResult = await chatService.addMembers(id, addMembers);
-      results.push({ action: "addMembers", result: addResult });
+    if (Array.isArray(add_Members) && add_Members.length > 0) {
+      try {
+        await chatService.addMembers(id, add_Members);
+      } catch (err) {
+        console.error("Error adding members:", err);
+        return res
+          .status(500)
+          .json({ message: "Failed to add members", error: err.message });
+      }
     }
 
     // Remove members
-    if (Array.isArray(removeMembers) && removeMembers.length > 0) {
-      const removeResult = await chatService.removeMembers(id, removeMembers);
-      results.push({ action: "removeMembers", result: removeResult });
+    if (Array.isArray(remove_Members) && remove_Members.length > 0) {
+      try {
+        await chatService.removeMembers(id, remove_Members);
+      } catch (err) {
+        console.error("Error removing members:", err);
+        return res
+          .status(500)
+          .json({ message: "Failed to remove members", error: err.message });
+      }
     }
 
     // Add admin
-    if (Array.isArray(addAdmin) && addAdmin.length > 0) {
-      const addAdminResult = await chatService.addAdmins(id, addAdmin);
-      results.push({ action: "addAdmins", result: addAdminResult });
+    if (Array.isArray(add_Admin) && add_Admin.length > 0) {
+      try {
+        console.log(add_Admin);
+        await chatService.addAdmins(id, add_Admin);
+      } catch (err) {
+        console.error("Error adding admins:", err);
+        return res
+          .status(500)
+          .json({ message: "Failed to add admins", error: err.message });
+      }
     }
 
     // Remove admin
-    if (Array.isArray(removeAdmin) && removeAdmin.length > 0) {
-      const removeAdminResult = await chatService.removeAdmins(id, removeAdmin);
-      results.push({ action: "removeAdmins", result: removeAdminResult });
-    }
-
-    if (results.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "No valid update actions provided" });
+    if (Array.isArray(remove_Admin) && remove_Admin.length > 0) {
+      try {
+        await chatService.removeAdmins(id, remove_Admin);
+      } catch (err) {
+        console.error("Error removing admins:", err);
+        return res
+          .status(500)
+          .json({ message: "Failed to remove admins", error: err.message });
+      }
     }
 
     res.status(200).json({
-      success: true,
       message: "Chat updated successfully",
-      changes: results,
     });
   } catch (err) {
+    console.error("UpdateChat Error:", err);
     res.status(500).json({ message: err.message });
   }
 }
@@ -124,7 +146,7 @@ async function DeleteChat(req, res) {
   }
   try {
     const result = await chatService.deleteChat(id, userId);
-    res.status(200).json(result);
+    res.status(200).json("Chat deleted successfully", result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

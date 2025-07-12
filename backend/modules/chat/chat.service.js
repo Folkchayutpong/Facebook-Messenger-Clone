@@ -28,6 +28,19 @@ eventBus.on("CreatePrivateChatService", async (data) => {
   }
 });
 
+//remove private chatService
+eventBus.on("RemovePrivateChatService", async (data) => {
+  try {
+    await Chats.findOneAndDelete({
+      type: "private",
+      member: { $all: [data.senderId, data.receiverId] },
+    });
+    console.log("Private chat removed successfully");
+  } catch (err) {
+    console.error("Error removing private chat:", err.message);
+  }
+});
+
 //create group chatService
 async function createGroupChatService(name, members, type, admins) {
   try {
@@ -63,71 +76,70 @@ async function getChatName(id) {
 async function renameChat(id, newName) {
   try {
     await Chats.findOneAndUpdate({ _id: id }, { name: newName });
-    return result;
   } catch (err) {
     throw new Error(err.message);
   }
 }
 
 //add user to group
-async function addMembers(id, userId) {
+async function addMembers(id, members) {
   try {
-    const result = await Chats.findOneAndUpdate(
+    await Chats.findOneAndUpdate(
       { _id: id },
-      { $addToSet: { members: { $each: [userId] } } }
+      { $addToSet: { members: { $each: members } } }
     );
-    return result;
   } catch (err) {
     throw new Error(err.message);
   }
 }
 
 //remove user from group
-async function removeMembers(id, userId) {
+async function removeMembers(id, members) {
   try {
-    const result = await Chats.findOneAndUpdate(
+    await Chats.findOneAndUpdate(
       { _id: id },
-      { $pull: { members: { $each: [userId] } } }
+      { $pull: { members: { $in: members } } }
     );
-    return result;
   } catch (err) {
     throw new Error(err.message);
   }
 }
 
 //add admin to group
-async function addAdmins(id, userId) {
+async function addAdmins(id, admins) {
   try {
-    const result = await Chats.findOneAndUpdate(
+    await Chats.findOneAndUpdate(
       { _id: id },
-      { $addToSet: { admins: { each: [userId] } } }
+      { $addToSet: { admins: { $each: admins } } }
     );
-    return result;
   } catch (err) {
     throw new Error(err.message);
   }
 }
 
 //remove admin from group
-async function removeAdmins(id, userId) {
+async function removeAdmins(id, admins) {
   try {
-    const result = await Chats.findOneAndUpdate(
+    await Chats.findOneAndUpdate(
       { _id: id },
-      { $pull: { admins: { each: [userId] } } }
+      { $pull: { admins: { $in: admins } } }
     );
-    return result;
   } catch (err) {
     throw new Error(err.message);
   }
 }
 
 //delete chat
-async function deleteChat(chatId, userId) {
+async function deleteChat(chatId) {
   try {
     const chat = await Chats.findById(chatId);
 
     if (!chat) {
       throw new Error("Chat not found");
+    }
+
+    if (chat.type === "private") {
+      throw new Error("Cannot delete private chat");
     }
 
     const deleted = await Chats.findOneAndDelete({ _id: chatId });
