@@ -36,7 +36,9 @@ async function CreateGroupChat(req, res) {
       memberObjectIds[memberObjectIds.length - 1]
     );
 
-    res.status(200).json(result);
+    res
+      .status(200)
+      .json({ message: "Group chat created successfully", data: result });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -67,73 +69,19 @@ async function UpdateChat(req, res) {
       return res.status(403).json({ message: "You are not an admin" });
     }
 
-    // Rename chat
-    if (newName) {
-      try {
-        await chatService.renameChat(id, newName);
-      } catch (err) {
-        console.error("Error renaming chat:", err);
-        return res
-          .status(500)
-          .json({ message: "Failed to rename chat", error: err.message });
-      }
-    }
+    if (newName) await chatService.renameChat(id, newName);
+    if (Array.isArray(add_Members) && add_Members.length > 0)
+      await chatService.addMembers(id, add_Members);
+    if (Array.isArray(remove_Members) && remove_Members.length > 0)
+      await chatService.removeMembers(id, remove_Members);
+    if (Array.isArray(add_Admin) && add_Admin.length > 0)
+      await chatService.addAdmins(id, add_Admin);
+    if (Array.isArray(remove_Admin) && remove_Admin.length > 0)
+      await chatService.removeAdmins(id, remove_Admin);
 
-    // Add members
-    if (Array.isArray(add_Members) && add_Members.length > 0) {
-      try {
-        await chatService.addMembers(id, add_Members);
-      } catch (err) {
-        console.error("Error adding members:", err);
-        return res
-          .status(500)
-          .json({ message: "Failed to add members", error: err.message });
-      }
-    }
-
-    // Remove members
-    if (Array.isArray(remove_Members) && remove_Members.length > 0) {
-      try {
-        await chatService.removeMembers(id, remove_Members);
-      } catch (err) {
-        console.error("Error removing members:", err);
-        return res
-          .status(500)
-          .json({ message: "Failed to remove members", error: err.message });
-      }
-    }
-
-    // Add admin
-    if (Array.isArray(add_Admin) && add_Admin.length > 0) {
-      try {
-        console.log(add_Admin);
-        await chatService.addAdmins(id, add_Admin);
-      } catch (err) {
-        console.error("Error adding admins:", err);
-        return res
-          .status(500)
-          .json({ message: "Failed to add admins", error: err.message });
-      }
-    }
-
-    // Remove admin
-    if (Array.isArray(remove_Admin) && remove_Admin.length > 0) {
-      try {
-        await chatService.removeAdmins(id, remove_Admin);
-      } catch (err) {
-        console.error("Error removing admins:", err);
-        return res
-          .status(500)
-          .json({ message: "Failed to remove admins", error: err.message });
-      }
-    }
-
-    res.status(200).json({
-      message: "Chat updated successfully",
-    });
+    res.status(200).json({ message: "Chat updated successfully" });
   } catch (err) {
-    console.error("UpdateChat Error:", err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Failed to update chat" });
   }
 }
 
@@ -146,7 +94,7 @@ async function DeleteChat(req, res) {
   }
   try {
     const result = await chatService.deleteChat(id, userId);
-    res.status(200).json("Chat deleted successfully", result);
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
