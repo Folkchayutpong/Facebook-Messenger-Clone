@@ -73,6 +73,11 @@ async function removeService(ownerId, targetId) {
       return { message: "Users were not friends" };
     }
 
+    eventBus.emit("RemovePrivateChatService", {
+      senderId: ownerId,
+      receiverId: targetId,
+    });
+
     await Promise.all([ownerList.save(), targetList.save()]);
 
     return { message: "Friend removed" };
