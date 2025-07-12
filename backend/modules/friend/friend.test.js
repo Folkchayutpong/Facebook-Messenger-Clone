@@ -7,10 +7,11 @@ const ObjectId = mongoose.Types.ObjectId;
 const { expressAuthMiddleware } = require("../../middleware/auth");
 const jwt = require("jsonwebtoken");
 const { redisClient } = require("../../config/redis");
-
+const cookieParser = require("cookie-parser");  
 jest.mock("./friend.service");
 
 const app = express();
+app.use(cookieParser());
 app.use(express.json());
 
 beforeAll(async () => {
@@ -35,7 +36,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(200);
@@ -45,7 +46,7 @@ describe("Friend add API", () => {
   it("should return 400 if targetId missing", async () => {
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({});
 
     expect(res.statusCode).toBe(400);
@@ -55,7 +56,7 @@ describe("Friend add API", () => {
   it("should return 400 if Send request to yourself", async () => {
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f191e810c19729de860ea" });
 
     expect(res.statusCode).toBe(400);
@@ -72,7 +73,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -86,7 +87,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -100,7 +101,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -114,7 +115,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -131,7 +132,7 @@ describe("Friend remove API", () => {
 
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(200);
@@ -141,7 +142,7 @@ describe("Friend remove API", () => {
   it("should return 400 if remove targetId missing", async () => {
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({});
 
     expect(res.statusCode).toBe(400);
@@ -151,7 +152,7 @@ describe("Friend remove API", () => {
   it("should return 400 if try to remove yourself", async () => {
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f191e810c19729de860ea" });
 
     expect(res.statusCode).toBe(400);
@@ -168,7 +169,7 @@ describe("Friend remove API", () => {
 
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -182,7 +183,7 @@ describe("Friend remove API", () => {
 
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -200,7 +201,7 @@ describe("Friend accept API", () => {
 
     const res = await request(app)
       .post("/api/friend/accept")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(200);
@@ -210,7 +211,7 @@ describe("Friend accept API", () => {
   it("should return 400 if accept requesterId missing", async () => {
     const res = await request(app)
       .post("/api/friend/accept")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({});
 
     expect(res.statusCode).toBe(400);
@@ -220,7 +221,7 @@ describe("Friend accept API", () => {
   it("should return 400 if try to accept yourself", async () => {
     const res = await request(app)
       .post("/api/friend/accept")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f191e810c19729de860ea" });
 
     expect(res.statusCode).toBe(400);
@@ -237,7 +238,7 @@ describe("Friend accept API", () => {
 
     const res = await request(app)
       .post("/api/friend/accept")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -255,7 +256,7 @@ describe("Friend decline API", () => {
 
     const res = await request(app)
       .post("/api/friend/decline")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(200);
@@ -265,7 +266,7 @@ describe("Friend decline API", () => {
   it("should return 400 if declined requesterId missing", async () => {
     const res = await request(app)
       .post("/api/friend/decline")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({});
 
     expect(res.statusCode).toBe(400);
@@ -275,7 +276,7 @@ describe("Friend decline API", () => {
   it("should return 400 if try to decline yourself", async () => {
     const res = await request(app)
       .post("/api/friend/decline")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f191e810c19729de860ea" });
 
     expect(res.statusCode).toBe(400);
@@ -292,7 +293,7 @@ describe("Friend decline API", () => {
 
     const res = await request(app)
       .post("/api/friend/decline")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
