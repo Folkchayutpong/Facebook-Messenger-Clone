@@ -33,7 +33,7 @@ eventBus.on("RemovePrivateChatService", async (data) => {
   try {
     await Chats.findOneAndDelete({
       type: "private",
-      member: { $all: [data.senderId, data.receiverId] },
+      members: { $all: [data.senderId, data.receiverId] },
     });
     console.log("Private chat removed successfully");
   } catch (err) {
