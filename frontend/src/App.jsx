@@ -1,14 +1,15 @@
-import logo from './logo.svg';
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import LoginPage from "./Page/LoginPage.js";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LoginPage from "./Page/LoginPage";
 import RegisterPage from "./Page/RegisterPage";
-import './App.css';
+import viteLogo from "./logo.svg";
+import { useState } from "react";
 
 function App() {
+  const [count, setCount] = useState(0);
+
   return (
     <Router>
       <Routes>
-        // login and register routes
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>
