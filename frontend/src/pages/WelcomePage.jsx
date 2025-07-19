@@ -1,13 +1,28 @@
+import { useNavigate } from "react-router-dom";
+
 const WelcomePage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex justify-around items-center h-screen gap-8 px-4">
+      {/* left content */}
       <div className="max-w-md">
         <h1 className="text-3xl font-bold">Welcome</h1>
         <h2 className="text-xl mt-2">to our community</h2>
         <p className="mt-4">
           Lorem ipsum dolor sit amet consectetur adipisicing elit...
         </p>
+        <button
+          className="btn btn-primary mt-4"
+          onClick={() => navigate("/register")}
+        >
+          Get Started
+        </button>
       </div>
+
+      <div className="w-px h-[55%] bg-gray-300 opacity-50 rounded-2xl"></div>
+
+      {/* right content */}
       <div className="bg-base-200 rounded-lg shadow-lg p-4 w-full max-w-md h-[400px] flex flex-col">
         <div className="flex-1 overflow-y-auto mb-4">
           <div className="chat chat-start ">
@@ -47,7 +62,7 @@ const WelcomePage = () => {
         {/* TODO: implement interactive chat box */}
         <div className="flex gap-2">
           <div className="border flex items-center flex-1 rounded-lg indent-2">
-            <h2 className="opacity-50">type something....</h2>
+            <p className="opacity-50 text-sm">type something....</p>
           </div>
           <div className="btn btn-primary">Send</div>
         </div>
