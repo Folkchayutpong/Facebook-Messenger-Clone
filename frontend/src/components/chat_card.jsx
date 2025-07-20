@@ -1,9 +1,11 @@
 import Avartar from "./avartar";
+import { Link } from "react-router-dom";
 
 const ChatCard = () => {
   return (
-    <div className="flex-1 overflow-auto p-2">
-      <div className="card bg-base-100 shadow-sm mb-1 p-2">
+    <Link>
+      to={`/chat/${userId}`}
+      <div className="block card bg-base-100 shadow-sm mb-3 p-2 hover:bg-base-200 transition cursor-pointer">
         <div className="flex items-center gap-4">
           <Avartar />
           <div>
@@ -12,7 +14,7 @@ const ChatCard = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
