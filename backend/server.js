@@ -8,7 +8,7 @@ const messageRoute = require("./modules/message/message.route");
 const conectDB = require("./config/db");
 const { connectRedis } = require("./config/redis");
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 //create server
 const server = http.createServer(app);

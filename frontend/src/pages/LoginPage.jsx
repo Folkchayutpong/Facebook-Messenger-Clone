@@ -12,12 +12,12 @@ const LoginPage = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND}/login`,
+        `/api/user/login`,
         { email, password }
       );
       const { token } = response.data;
       localStorage.setItem("token", token);
-      navigate("/");
+      navigate("/messages");
     } catch (error) {
       setErrorMessage(error.response?.data?.msg || "Login failed");
     }

@@ -1,18 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const messageController = require("./message.controller");
-const auth = require("../../middleware/auth"); 
+const { expressAuthMiddleware } = require("../../middleware/auth"); 
 
 // สร้างข้อความใหม่
-router.post("/", auth, messageController.createMessage);
+router.post("/", expressAuthMiddleware, messageController.createMessage);
 
 // ดึงข้อความทั้งหมดใน chat
-router.get("/:chatId", auth, messageController.getMessages);
+router.get("/:chatId", expressAuthMiddleware, messageController.getMessages);
 
 // แก้ไขข้อความ
-router.patch("/:messageId", auth, messageController.editMessage);
+router.patch("/:messageId", expressAuthMiddleware, messageController.editMessage);
 
 // ลบข้อความ
-router.delete("/:messageId", auth, messageController.deleteMessage);
+router.delete("/:messageId", expressAuthMiddleware, messageController.deleteMessage);
 
 module.exports = router;

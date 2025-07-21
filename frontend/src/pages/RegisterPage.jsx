@@ -47,7 +47,7 @@ const RegisterPage = () => {
 
     setIsSubmitting(true);
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND}/register`, {
+      await axios.post(`api/user/register`, {
         username,
         email,
         password,
@@ -56,7 +56,6 @@ const RegisterPage = () => {
       navigate("/login");
     } catch (error) {
       console.error("Register error:", error);
-      console.log(`log here: ${process.env.REACT_APP_BACKEND}/register`);
       const msg =
         error.response?.data?.msg ||
         error.message ||
