@@ -9,9 +9,10 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<WelcomePage />} />
+        <Route path="/messages" element={<MainPage />} />
+        <Route path="/messages/:userId" element={<MainPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/messages" element={<MainPage />} />
       </Routes>
     </Router>
   );

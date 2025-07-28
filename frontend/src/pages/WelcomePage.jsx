@@ -14,7 +14,7 @@ const WelcomePage = () => {
         </p>
         <button
           className="btn btn-primary mt-4"
-          onClick={() => navigate("/register")}
+          onClick={() => navigate("/login")}
         >
           Get Started
         </button>

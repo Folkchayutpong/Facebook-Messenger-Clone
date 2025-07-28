@@ -3,7 +3,7 @@ import ChatCard from "./chat_card";
 import Avartar from "./avartar";
 import logo from "../assets/react.svg";
 
-const FriendChats = () => {
+const FriendChats = ({ friendChats, onSelectFriend, selectedFriend }) => {
   return (
     <div className="bg-base-300 h-screen w-1/4 flex flex-col text-white">
       <div className="flex items-center p-2">
@@ -14,16 +14,15 @@ const FriendChats = () => {
         <SearchBar />
       </div>
       <div className="flex-1 overflow-auto p-2">
-        <ChatCard />
-        <ChatCard />
-        <ChatCard />
-        <ChatCard />
-        <ChatCard />
-        <ChatCard />
-        <ChatCard />
-        <ChatCard />
-        <ChatCard />
-        <ChatCard />
+        {friendChats.map((friend) => (
+          <div key={friend._id} onClick={() => onSelectFriend(friend)}>
+            <ChatCard
+              name={friend.name}
+              isSelected={selectedFriend?._id === friend._id}
+              chatId={friend._id}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
