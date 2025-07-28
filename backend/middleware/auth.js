@@ -18,7 +18,7 @@ const socketAuthMiddleware = async (socket, next) => {
       return next(new Error("Invalid or expired token"));
     }
 
-    const user = await User.findById(decoded.id).select("name email");
+    const user = await User.findById(decoded.id).select("username email");
     if (!user) return next(new Error("User not found"));
 
     socket.user = user; // <-- assign User document, ไม่ใช่แค่ decoded token
@@ -40,7 +40,10 @@ const expressAuthMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
-    req.user = decoded;
+    const user = await User.findById(decoded.id).select("username email");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    req.user = user;
     next();
   } catch (err) {
     return res.status(401).json({ message: "Unauthorized" });

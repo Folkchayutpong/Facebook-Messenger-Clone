@@ -1,8 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { Server } = require("socket.io");
 const cookieParser = require("cookie-parser");
-const { socketAuthMiddleware } = require("./middleware/auth");
 
 //setup express
 const app = express();
@@ -10,7 +8,8 @@ const app = express();
 //setup cors middleware
 const corsOptions = {
   origin: "http://localhost:8080",
-  credentials: true,   
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
 };
 
 //use middleware
@@ -19,4 +18,4 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(cors(corsOptions));
 
-module.exports = app
+module.exports = app;

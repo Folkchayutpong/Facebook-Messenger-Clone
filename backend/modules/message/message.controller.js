@@ -3,7 +3,9 @@ const messageService = require("./message.service");
 // POST /messages - ส่งข้อความใหม่
 async function createMessage(req, res) {
   try {
-    const { chatId, content, messageType, mediaUrl, replyTo, } = req.body;
+    const { chatId, content, messageType, mediaUrl, replyTo } = req.body;
+    console.log("here", req.user);
+    console.log("body", req.body);
     // ไม่มี chatId
     if (!chatId) {
       return res
@@ -13,7 +15,8 @@ async function createMessage(req, res) {
     // ถ้ามีข้อความ
     const hasText = typeof content === "string" && content.trim() !== "";
     // ถ้ามีรูป
-    const hasMedia = req.body.mediaUrl !== null && req.body.mediaUrl !== undefined;
+    const hasMedia =
+      req.body.mediaUrl !== null && req.body.mediaUrl !== undefined;
     //ต้องมีอย่างใดอย่างนึง
     if (!hasText && !hasMedia) {
       return res.status(400).json({
@@ -21,11 +24,16 @@ async function createMessage(req, res) {
         error: "Message must contain either text or media",
       });
     }
+
+    const sender = req.user?.id;
+    const senderName = req.user?.username;
+
     // เรียก service สร้างข้อความ
     const message = await messageService.createMessage({
-      chatId,
-      sender,
-      content,
+      chatId: chatId,
+      sender: sender,
+      senderName: senderName,
+      content: content,
       //เอาแค่ข้อความก่อน
       messageType: "text",
       mediaUrl: null,
@@ -44,8 +52,10 @@ async function getMessages(req, res) {
   try {
     const chatId = req.params.chatId;
     // ไม่มี chatId
-     if (!chatId) {
-      return res.status(400).json({ success: false, error: "chatId is required" });
+    if (!chatId) {
+      return res
+        .status(400)
+        .json({ success: false, error: "chatId is required" });
     }
     //เรียก service ดึงข้อความ
     const messages = await messageService.getMessages(chatId);
@@ -64,11 +74,15 @@ async function editMessage(req, res) {
     const userId = req.user.id;
     // ไม่มี messageId
     if (!messageId) {
-      return res.status(400).json({ success: false, error: "messageId is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "messageId is required" });
     }
     // ไม่มีใช่ข้อความ
     if (typeof content !== "string" || content.trim() === "") {
-      return res.status(400).json({ success: false, error: "content must be a non-empty string" });
+      return res
+        .status(400)
+        .json({ success: false, error: "content must be a non-empty string" });
     }
     //เรียก service แก้ข้อความ
     const updated = await messageService.editMessage({
@@ -87,8 +101,10 @@ async function deleteMessage(req, res) {
     const { messageId } = req.params;
     const userId = req.user.id;
     // ไม่มี messageId
-     if (!messageId) {
-      return res.status(400).json({ success: false, error: "messageId is required" });
+    if (!messageId) {
+      return res
+        .status(400)
+        .json({ success: false, error: "messageId is required" });
     }
     //เรียก service ลบข้อความ
     await messageService.deleteMessage({ messageId, userId });
