@@ -7,10 +7,11 @@ const ObjectId = mongoose.Types.ObjectId;
 const { expressAuthMiddleware } = require("../../middleware/auth");
 const jwt = require("jsonwebtoken");
 const { redisClient } = require("../../config/redis");
-
+const cookieParser = require("cookie-parser");
 jest.mock("./friend.service");
 
 const app = express();
+app.use(cookieParser());
 app.use(express.json());
 
 beforeAll(async () => {
@@ -25,7 +26,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await redisClient.del(`token:${tokenPayload.id}`); // ล้าง token ที่ใช้ทดสอบ
   await redisClient.quit(); // ปิด redis connection
-},10000);
+}, 10000);
 
 //add
 app.post("/api/friend/add", expressAuthMiddleware, friendcontroller.add);
@@ -35,7 +36,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(200);
@@ -45,7 +46,7 @@ describe("Friend add API", () => {
   it("should return 400 if targetId missing", async () => {
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({});
 
     expect(res.statusCode).toBe(400);
@@ -55,7 +56,7 @@ describe("Friend add API", () => {
   it("should return 400 if Send request to yourself", async () => {
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f191e810c19729de860ea" });
 
     expect(res.statusCode).toBe(400);
@@ -72,7 +73,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -86,7 +87,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -100,7 +101,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -114,7 +115,7 @@ describe("Friend add API", () => {
 
     const res = await request(app)
       .post("/api/friend/add")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -131,7 +132,7 @@ describe("Friend remove API", () => {
 
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(200);
@@ -141,7 +142,7 @@ describe("Friend remove API", () => {
   it("should return 400 if remove targetId missing", async () => {
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({});
 
     expect(res.statusCode).toBe(400);
@@ -151,7 +152,7 @@ describe("Friend remove API", () => {
   it("should return 400 if try to remove yourself", async () => {
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f191e810c19729de860ea" });
 
     expect(res.statusCode).toBe(400);
@@ -168,7 +169,7 @@ describe("Friend remove API", () => {
 
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -182,7 +183,7 @@ describe("Friend remove API", () => {
 
     const res = await request(app)
       .post("/api/friend/remove")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ targetId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -200,7 +201,7 @@ describe("Friend accept API", () => {
 
     const res = await request(app)
       .post("/api/friend/accept")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(200);
@@ -210,7 +211,7 @@ describe("Friend accept API", () => {
   it("should return 400 if accept requesterId missing", async () => {
     const res = await request(app)
       .post("/api/friend/accept")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({});
 
     expect(res.statusCode).toBe(400);
@@ -220,7 +221,7 @@ describe("Friend accept API", () => {
   it("should return 400 if try to accept yourself", async () => {
     const res = await request(app)
       .post("/api/friend/accept")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f191e810c19729de860ea" });
 
     expect(res.statusCode).toBe(400);
@@ -237,7 +238,7 @@ describe("Friend accept API", () => {
 
     const res = await request(app)
       .post("/api/friend/accept")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
@@ -246,7 +247,11 @@ describe("Friend accept API", () => {
 });
 
 //decline
-app.post("/api/friend/decline", expressAuthMiddleware, friendcontroller.decline);
+app.post(
+  "/api/friend/decline",
+  expressAuthMiddleware,
+  friendcontroller.decline
+);
 describe("Friend decline API", () => {
   it("should decline friend successfully", async () => {
     friendService.declineService.mockResolvedValue({
@@ -255,7 +260,7 @@ describe("Friend decline API", () => {
 
     const res = await request(app)
       .post("/api/friend/decline")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(200);
@@ -265,7 +270,7 @@ describe("Friend decline API", () => {
   it("should return 400 if declined requesterId missing", async () => {
     const res = await request(app)
       .post("/api/friend/decline")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({});
 
     expect(res.statusCode).toBe(400);
@@ -275,7 +280,7 @@ describe("Friend decline API", () => {
   it("should return 400 if try to decline yourself", async () => {
     const res = await request(app)
       .post("/api/friend/decline")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f191e810c19729de860ea" });
 
     expect(res.statusCode).toBe(400);
@@ -292,10 +297,97 @@ describe("Friend decline API", () => {
 
     const res = await request(app)
       .post("/api/friend/decline")
-      .set("Authorization", `Bearer ${token}`)
+      .set("Cookie", [`token=${token}`])
       .send({ requesterId: "507f1f77bcf86cd799439011" });
 
     expect(res.statusCode).toBe(500);
     expect(res.body.message).toBe("Friend list not found");
+  });
+});
+
+//getFriend
+app.get("/api/friend/list", expressAuthMiddleware, friendcontroller.getFriend);
+describe("Get Friend list API", () => {
+  it("should get friend list successfully", async () => {
+    const mockFriends = [
+      { _id: "1", name: "Alice" },
+      { _id: "2", name: "Bob" },
+    ];
+    friendService.getFriendList.mockResolvedValue(mockFriends);
+
+    const res = await request(app)
+      .get("/api/friend/list")
+      .set("Cookie", [`token=${token}`]);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(mockFriends);
+  });
+
+  it("should return 500 if friendService throws", async () => {
+    friendService.getFriendList.mockImplementation(() => {
+      throw new Error("Friend list not found");
+    });
+
+    const res = await request(app)
+      .get("/api/friend/list")
+      .set("Cookie", [`token=${token}`]);
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Failed to get friend list");
+  });
+});
+//get inbound
+app.get("/api/friend/inbound", expressAuthMiddleware, friendcontroller.getInbound);
+describe("GET /api/friend/inbound", () => {
+  it("should return inbound requests", async () => {
+    const inbound = [{ _id: "3", name: "Charlie" }];
+    friendService.getInboundList.mockResolvedValue(inbound);
+
+    const res = await request(app)
+      .get("/api/friend/inbound")
+      .set("Cookie", [`token=${token}`]);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(inbound);
+  });
+   it("should return 500 if friendService throws", async () => {
+    friendService.getInboundList.mockImplementation(() => {
+      throw new Error("Inbound list not found");
+    });
+
+    const res = await request(app)
+      .get("/api/friend/inbound")
+      .set("Cookie", [`token=${token}`]);
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Failed to get inbound requests");
+  });
+});
+//get outbound
+app.get("/api/friend/outbound", expressAuthMiddleware, friendcontroller.getOutbound);
+describe("GET /api/friend/outbound", () => {
+  it("should return outbound requests", async () => {
+    const outbound = [{ _id: "4", name: "Diana" }];
+    friendService.getOutboundList.mockResolvedValue(outbound);
+
+    const res = await request(app)
+      .get("/api/friend/outbound")
+      .set("Cookie", [`token=${token}`]);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(outbound);
+  });
+  it("should return 500 if friendService throws", async () => {
+    friendService.getOutboundList.mockImplementation(() => {
+      throw new Error("Outbound list not found");
+    });
+
+    const res = await request(app)
+      .get("/api/friend/outbound")
+      .set("Cookie", [`token=${token}`]);
+    expect(res.statusCode).toBe(500);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Failed to get outbound requests");
   });
 });

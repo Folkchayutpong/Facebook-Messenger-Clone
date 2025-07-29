@@ -2,11 +2,11 @@ require("dotenv").config({ path: "./config/.env" });
 const jwt = require("jsonwebtoken");
 const { redisClient } = require("../config/redis");
 const { parseTokenFromCookie } = require("../utils/utils");
+const User = require("../modules/user/user.model");
 
 //authentication middleware
 const socketAuthMiddleware = async (socket, next) => {
   const token = parseTokenFromCookie(socket.handshake.headers?.cookie);
-  console.log(token);
   if (!token) return next(new Error("Missing token"));
 
   try {
@@ -18,13 +18,15 @@ const socketAuthMiddleware = async (socket, next) => {
       return next(new Error("Invalid or expired token"));
     }
 
-    socket.user = decoded;
+    const user = await User.findById(decoded.id).select("username email");
+    if (!user) return next(new Error("User not found"));
+
+    socket.user = user; // <-- assign User document, ไม่ใช่แค่ decoded token
     next();
   } catch (err) {
     next(new Error("Unauthorized"));
   }
 };
-
 const expressAuthMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
   if (!token) return res.status(401).json({ message: "Missing token" });
@@ -38,7 +40,10 @@ const expressAuthMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
-    req.user = decoded;
+    const user = await User.findById(decoded.id).select("username email");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    req.user = user;
     next();
   } catch (err) {
     return res.status(401).json({ message: "Unauthorized" });

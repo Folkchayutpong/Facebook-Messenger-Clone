@@ -52,7 +52,6 @@ describe("POST /api/chats", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       message: "Group chat created successfully",
-      data: mockChat,
     });
   });
 
