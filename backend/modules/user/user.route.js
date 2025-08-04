@@ -6,10 +6,6 @@ const { expressAuthMiddleware } = require("../../middleware/auth");
 router.post("/register", userController.register);
 router.post("/login", userController.login);
 router.get("/profile", expressAuthMiddleware, userController.getUserProfile);
-router.get(
-  "/profile/:id",
-  expressAuthMiddleware,
-  userController.getUserProfileById
-);
+router.get("/profile/:id",expressAuthMiddleware,userController.getUserProfileById);
 
 module.exports = router;
