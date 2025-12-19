@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const ChatCard = ({ name, chatId }) => {
   return (
-    <Link to={`/chat/${chatId}`}>
+    <Link to={`/messages/${chatId}`}>
       <div className="block card bg-base-100 shadow-sm mb-3 p-2 hover:bg-base-200 transition cursor-pointer">
         <div className="flex items-center gap-4">
           <Avartar />
