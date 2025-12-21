@@ -7,7 +7,6 @@ const Chat = ({ user, friendChat, socket }) => {
   const [newMessage, setNewMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const bottomRef = useRef(null);
-
   // Fetch messages
   useEffect(() => {
     if (!friendChat?._id) return;
@@ -26,7 +25,7 @@ const Chat = ({ user, friendChat, socket }) => {
     fetchMessages();
   }, [friendChat]);
 
-  console.log("chatMessages", chatMessages);
+  // console.log("chatMessages", chatMessages);
 
   // Fetch member profiles
   useEffect(() => {
@@ -109,7 +108,15 @@ const Chat = ({ user, friendChat, socket }) => {
 
   // Render
   if (loading || Object.keys(friendMap).length === 0) {
-    return <div className="flex flex-col h-screen w-2/3">Loading...</div>;
+    return (
+      <div className="flex flex-col h-screen w-2/3 justify-center items-center text-gray-400 text-lg">
+        <img
+          src="/select chat icon.png"
+          alt="Select chat"
+          className="w-50 h-auto"
+        />
+      </div>
+    );
   }
 
   return (

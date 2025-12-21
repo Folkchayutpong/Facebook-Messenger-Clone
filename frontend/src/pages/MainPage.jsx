@@ -16,6 +16,7 @@ const MainPage = () => {
   const [friendChats, setFriendChats] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [curUser, setCurUser] = useState(null);
+  const [lastMessageMap, setLastMessageMap] = useState({});
 
   // Connect websocket to all freindlist that user has
   useEffect(() => {
@@ -57,7 +58,7 @@ const MainPage = () => {
       <FriendChats
         friendChats={friendChats}
         onSelectFriend={handleSelectFriend}
-        selectedFriend={selectedFriend}
+        curUser={curUser}
       />
       <Chat
         friendChat={selectedFriend}
