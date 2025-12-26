@@ -32,6 +32,30 @@ const MainPage = () => {
     return () => {
       socket.off("connect");
     };
+  }, []);
+
+  // Listen for new messages and update lastMessageMap
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleReceiveMessage = (message) => {
+      console.log("Received message in MainPage:", message);
+
+      // Update the last message for this chat
+      setLastMessageMap((prev) => ({
+        ...prev,
+        [message.chatId]: {
+          lastMessage: message.content,
+          senderName: message.senderName,
+        },
+      }));
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+    };
   }, [socket]);
 
   // Load friend chats
@@ -59,13 +83,10 @@ const MainPage = () => {
         friendChats={friendChats}
         onSelectFriend={handleSelectFriend}
         curUser={curUser}
+        lastMessageMap={lastMessageMap}
+        setLastMessageMap={setLastMessageMap}
       />
-      <Chat
-        friendChat={selectedFriend}
-        // messages={chatMessages}
-        user={curUser}
-        socket={socket}
-      />
+      <Chat friendChat={selectedFriend} user={curUser} socket={socket} />
       <ConfigChat />
     </div>
   );

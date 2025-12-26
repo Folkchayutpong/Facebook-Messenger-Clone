@@ -5,12 +5,19 @@ import logo from "../assets/react.svg";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const FriendChats = ({ friendChats, onSelectFriend, curUser }) => {
+const FriendChats = ({
+  friendChats,
+  onSelectFriend,
+  curUser,
+  lastMessageMap,
+  setLastMessageMap,
+}) => {
   const [friendNameMap, setFriendNameMap] = useState({});
-  const [lastMessageMap, setLastMessageMap] = useState({});
 
+  // Fetch friend names
   useEffect(() => {
     if (!friendChats?.length || !curUser?._id) return;
+
     const fetchFriends = async () => {
       try {
         const entries = await Promise.all(
@@ -36,6 +43,7 @@ const FriendChats = ({ friendChats, onSelectFriend, curUser }) => {
     fetchFriends();
   }, [friendChats, curUser]);
 
+  // Fetch last messages initially
   useEffect(() => {
     if (!friendChats?.length) return;
 
@@ -52,6 +60,7 @@ const FriendChats = ({ friendChats, onSelectFriend, curUser }) => {
                 lastMessage: res.data.messages?.at(-1)?.content,
                 senderName: res.data.messages?.at(-1)?.senderName,
               } || null;
+
             return [chat._id, lastMessage];
           })
         );
@@ -63,10 +72,7 @@ const FriendChats = ({ friendChats, onSelectFriend, curUser }) => {
     };
 
     fetchLastMessages();
-  }, [friendChats]);
-
-  // console.log("friendNames: ", friendNames);
-  // console.log("lastChatMessages: ", lastMessageMap["6947987663f5235a2c0db22f"]);
+  }, [friendChats, setLastMessageMap]);
 
   return (
     <div className="bg-base-300 h-screen w-1/4 flex flex-col text-white">
