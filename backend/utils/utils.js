@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie");
-require("dotenv").config({ path: "./config/.env" });
 
 //generate access token
 function generateAccessToken(id, email) {
