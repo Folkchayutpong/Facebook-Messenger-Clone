@@ -4,6 +4,7 @@ import Avartar from "./avartar";
 import logo from "../assets/react.svg";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const FriendChats = ({
   friendChats,
@@ -11,8 +12,11 @@ const FriendChats = ({
   curUser,
   lastMessageMap,
   setLastMessageMap,
+  socket,
 }) => {
   const [friendNameMap, setFriendNameMap] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   // Fetch friend names
   useEffect(() => {
@@ -74,6 +78,21 @@ const FriendChats = ({
     fetchLastMessages();
   }, [friendChats, setLastMessageMap]);
 
+  const filteredChats = friendChats.filter((chat) => {
+    const friendName = friendNameMap[chat._id] || "";
+    return friendName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+
+    if (socket) {
+      socket.disconnect();
+    }
+
+    navigate("/login");
+  }
+
   return (
     <div className="bg-base-300 h-screen w-1/4 flex flex-col text-white">
       <div className="flex items-center p-2">
@@ -82,11 +101,11 @@ const FriendChats = ({
       </div>
 
       <div className="p-2">
-        <SearchBar />
+        <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
 
       <div className="flex-1 overflow-auto p-2">
-        {friendChats.map((friend) => (
+        {filteredChats.map((friend) => (
           <div key={friend._id} onClick={() => onSelectFriend(friend)}>
             <ChatCard
               name={friendNameMap[friend._id] || "Loading..."}
@@ -98,6 +117,10 @@ const FriendChats = ({
           </div>
         ))}
       </div>
+
+      <button className="btn btn-error m-4" onClick={handleLogout}>
+        Logout
+      </button>
     </div>
   );
 };

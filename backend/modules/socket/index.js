@@ -6,7 +6,6 @@ const Chat = require("../chat/chat.model");
 const User = require("../user/user.model");
 const { socketAuthMiddleware } = require("../../middleware/auth");
 const { timeStr } = require("../../utils/utils");
-const now = new Date();
 
 function initSocket(server) {
   const io = new Server(server);
@@ -18,11 +17,14 @@ function initSocket(server) {
 
     socket.on("join_chat", (chatId) => {
       socket.join(chatId);
+      console.log(`User ${socket.user.username} joined chat ${chatId}`);
     });
 
     socket.on("send_message", async (msg) => {
       try {
-        console.log(now);
+        // ใช้ Date.now() แทน const now ที่ declare ข้างนอก
+        const now = new Date();
+        console.log("Sending message at:", now);
 
         const newMessage = await Message.create({
           chatId: msg.chatId,
@@ -35,6 +37,7 @@ function initSocket(server) {
 
         const populated = await newMessage.populate("sender", "username");
 
+        // ส่ง message ไปยังทุกคนใน chat room รวมถึงคนส่งด้วย
         io.to(msg.chatId).emit("receive_message", {
           _id: newMessage._id,
           chatId: msg.chatId,
@@ -46,6 +49,12 @@ function initSocket(server) {
         });
       } catch (err) {
         console.error("❌ Error sending message:", err.message);
+
+        // ส่ง error กลับไปให้ client
+        socket.emit("message_error", {
+          error: "Failed to send message",
+          details: err.message,
+        });
       }
     });
 
@@ -53,6 +62,7 @@ function initSocket(server) {
       console.log("🔌 Socket disconnected:", socket.user.username);
     });
   });
+
   return io;
 }
 

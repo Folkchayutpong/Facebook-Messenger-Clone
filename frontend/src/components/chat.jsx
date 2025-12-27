@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
-const Chat = ({ user, friendChat, socket }) => {
+const Chat = ({ user, friendChat, socket, socketReady }) => {
   const [friendMap, setFriendMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
@@ -11,7 +11,6 @@ const Chat = ({ user, friendChat, socket }) => {
 
   // Fetch messages and member profiles when chat changes
   useEffect(() => {
-    // ถ้าไม่มี chat ให้ล้างข้อมูลทั้งหมด
     if (!friendChat?._id) {
       setChatMessages([]);
       setFriendMap({});
@@ -20,21 +19,16 @@ const Chat = ({ user, friendChat, socket }) => {
       return;
     }
 
-    // ถ้าเป็น chat เดิม ไม่ต้องทำอะไร
     if (previousChatIdRef.current === friendChat._id) {
       return;
     }
 
-    // บันทึก chat ID ปัจจุบัน
     previousChatIdRef.current = friendChat._id;
-
-    // ล้างข้อความและเริ่ม loading
     setChatMessages([]);
     setLoading(true);
 
     const fetchData = async () => {
       try {
-        // Fetch messages และ member profiles พร้อมกัน
         const [messagesRes, memberIds] = await Promise.all([
           axios.get(`/api/messages/${friendChat._id}`, {
             withCredentials: true,
@@ -42,10 +36,8 @@ const Chat = ({ user, friendChat, socket }) => {
           Promise.resolve(friendChat?.members || []),
         ]);
 
-        // Set messages
         setChatMessages(messagesRes.data.messages);
 
-        // Fetch member profiles
         const memberResponses = await Promise.all(
           memberIds.map((id) =>
             axios.get(`/api/user/profile/${id}`, {
@@ -55,7 +47,6 @@ const Chat = ({ user, friendChat, socket }) => {
         );
 
         const memberProfiles = memberResponses.map((res) => res.data);
-
         const friendOnly = memberProfiles.filter(
           (profile) => profile._id !== user._id
         );
@@ -75,14 +66,28 @@ const Chat = ({ user, friendChat, socket }) => {
     fetchData();
   }, [friendChat?._id, user?._id]);
 
-  // Send message
   const onSubmit = () => {
-    if (!newMessage.trim() || !friendChat || !user) return;
+    if (!newMessage.trim() || !friendChat || !user || !socketReady) return;
+
     const msg = {
       chatId: friendChat._id,
       content: newMessage,
     };
 
+    const tempMessage = {
+      _id: `temp-${Date.now()}`,
+      chatId: friendChat._id,
+      content: newMessage,
+      sender: user._id,
+      senderName: user.username,
+      messageType: "text",
+      sentAt: new Date().toLocaleTimeString("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setChatMessages((prev) => [...prev, tempMessage]);
     console.log("Sending message:", msg);
     socket.emit("send_message", msg);
     setNewMessage("");
@@ -91,11 +96,23 @@ const Chat = ({ user, friendChat, socket }) => {
   // Listen for new messages
   useEffect(() => {
     if (!socket) return;
-
     const handleReceiveMessage = (msg) => {
-      // เช็คว่าข้อความนี้เป็นของ chat ที่เปิดอยู่หรือไม่
       if (msg.chatId === friendChat?._id) {
-        setChatMessages((prev) => [...prev, msg]);
+        setChatMessages((prev) => {
+          const filteredPrev = prev.filter(
+            (m) =>
+              !(
+                m._id.toString().startsWith("temp-") &&
+                m.content === msg.content &&
+                m.sender === msg.sender
+              )
+          );
+
+          const exists = filteredPrev.some((m) => m._id === msg._id);
+          if (exists) return filteredPrev;
+
+          return [...filteredPrev, msg];
+        });
       }
     };
 
@@ -106,12 +123,10 @@ const Chat = ({ user, friendChat, socket }) => {
     };
   }, [socket, friendChat?._id]);
 
-  // Auto scroll to bottom when messages are updated
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  // Scroll to bottom when messages are loaded the first time
   useEffect(() => {
     if (chatMessages.length > 0 && !loading) {
       bottomRef.current?.scrollIntoView({ behavior: "auto" });
@@ -199,8 +214,13 @@ const Chat = ({ user, friendChat, socket }) => {
                 onSubmit();
               }
             }}
+            disabled={!socketReady}
           />
-          <button type="submit" className="btn btn-primary">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={!socketReady || !newMessage.trim()}
+          >
             Send
           </button>
         </form>

@@ -1,4 +1,4 @@
-const SearchBar = () => {
+const SearchBar = ({ value, onChange }) => {
   return (
     <label className="input rounded-full w-full">
       <svg
@@ -17,7 +17,13 @@ const SearchBar = () => {
           <path d="m21 21-4.3-4.3"></path>
         </g>
       </svg>
-      <input type="search" className="grow" placeholder="Search" />
+      <input
+        type="search"
+        className="grow"
+        placeholder="Search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </label>
   );
 };
