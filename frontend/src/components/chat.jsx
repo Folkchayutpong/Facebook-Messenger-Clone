@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import logo from "../assets/select chat icon.png";
 
 const Chat = ({ user, friendChat, socket, socketReady }) => {
   const [friendMap, setFriendMap] = useState({});
@@ -137,11 +138,7 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
   if (loading || Object.keys(friendMap).length === 0) {
     return (
       <div className="flex flex-col h-screen w-2/3 justify-center items-center text-gray-400 text-lg">
-        <img
-          src="/select chat icon.png"
-          alt="Select chat"
-          className="w-50 h-auto"
-        />
+        <img src={logo} alt="Select chat" className="w-50 h-auto" />
       </div>
     );
   }

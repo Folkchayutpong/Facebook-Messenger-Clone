@@ -1,7 +1,7 @@
 import SearchBar from "./search_bar";
 import ChatCard from "./chat_card";
 import Avartar from "./avartar";
-import logo from "../assets/react.svg";
+import logo from "../assets/Friend-Chats-logo.png";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
