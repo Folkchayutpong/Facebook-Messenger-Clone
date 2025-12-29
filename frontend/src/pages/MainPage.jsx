@@ -1,5 +1,6 @@
 import FriendChats from "../components/friend_chats";
 import ConfigChat from "../components/config_chat";
+import Sidebar from "../components/sidebar"
 import Chat from "../components/chat";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -53,7 +54,9 @@ const MainPage = () => {
   };
 
   return (
+   
     <div className="flex justify-center h-screen">
+      <Sidebar/>
       <FriendChats
         friendChats={friendChats}
         onSelectFriend={handleSelectFriend}

@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  avatar: {
+    type: String, // เก็บ URL
+    default: "",
+  },
 });
 
 const User = mongoose.model("User", userSchema);

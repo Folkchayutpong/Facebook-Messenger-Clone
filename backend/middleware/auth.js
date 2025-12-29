@@ -1,4 +1,3 @@
-require("dotenv").config({ path: "./config/.env" });
 const jwt = require("jsonwebtoken");
 const { redisClient } = require("../config/redis");
 const { parseTokenFromCookie } = require("../utils/utils");

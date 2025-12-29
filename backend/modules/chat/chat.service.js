@@ -12,7 +12,7 @@ eventBus.on("CreatePrivateChatService", async (data) => {
 
     if (!existing) {
       const newChat = new Chats({
-        name: `${data.senderId} and ${data.receiverId}`,
+        name: `${data.senderName} and ${data.receiverName}`,
         members: [data.senderId, data.receiverId],
         type: "private",
         admins: [data.senderId, data.receiverId],
@@ -55,7 +55,8 @@ async function createGroupChatService(name, members, type, admins) {
 //get all group chatService
 async function getChatsService(userId) {
   try {
-    const result = await Chats.find({ members: userId }).exec();
+    const result = await Chats.find({ members: userId }).populate("members", "username email")
+    .sort({ updatedAt: -1 });
     return result;
   } catch (err) {
     throw new Error(err.message);
