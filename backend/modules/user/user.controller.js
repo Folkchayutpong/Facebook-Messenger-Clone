@@ -4,6 +4,7 @@ const utils = require("../../utils/utils");
 const { redisClient } = require("../../config/redis");
 const User = require("./user.model");
 
+
 async function register(req, res) {
   const { email, username, password } = req.body;
 
@@ -61,9 +62,9 @@ async function login(req, res) {
     res.status(500).json({ message: error.message });
   }
 }
-const getUserProfile = async (req, res) => {
+async function getUserProfile(req, res) {
   try {
-    const user = await User.findById(req.user.id).select("username email");
+    const user = await User.findById(req.user.id).select("username email avatar");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -71,7 +72,7 @@ const getUserProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
-};
+}
 
 async function getUserProfileById(req, res) {
   try {
@@ -85,9 +86,51 @@ async function getUserProfileById(req, res) {
   }
 }
 
+async function uploadAvatar(req, res) {
+    try {
+    const avatarUrl = await userService.uploadAvatarService( req.user.id, req.file);
+    res.json({ avatar: avatarUrl });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+async function updateUserProfile(req, res) {
+  try {
+    const { username, avatar } = req.body;
+
+    const updateFields = {};
+
+    if (username !== undefined) {
+      updateFields.username = username;
+    }
+
+    if (avatar !== undefined) {
+      updateFields.avatar = avatar;
+    }
+    //no changes
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({ message: "No data to update" });
+    }
+
+    const updatedUser = userService.updateUserProfileService(req.user.id, updateFields);
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("patchUserProfile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
 module.exports = {
   register,
   login,
   getUserProfile,
   getUserProfileById,
+  updateUserProfile,
+  uploadAvatar
+  
 };
