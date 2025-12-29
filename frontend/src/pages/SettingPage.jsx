@@ -1,22 +1,33 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
-const SettingPage = ({ user }) => {
-  const [avatar, setAvatar] = useState(user?.avatar);
-  const [username, setUsername] = useState(user?.username);
-  const [email, setEmail] = useState(user?.email);
+const SettingPage = () => {
+  const [avatar, setAvatar] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null); // เก็บไฟล์จริงสำหรับส่งไป backend
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-  if (!avatar) { // หรือเช็คว่า avatar ว่างหรือยัง
-    setAvatar(user?.avatar);
-  }
-  setUsername(user?.username);
-  setEmail(user?.email);
-}, [user]);
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get("/api/user/profile", {
+          withCredentials: true,
+        });
+        console.log("User data fetched:", response.data);
+        setAvatar(response.data.avatar || "");
+        setUsername(response.data.username || "");
+        setEmail(response.data.email || "");
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        setMessage("Failed to load profile data.");
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -47,20 +58,23 @@ const SettingPage = ({ user }) => {
         formData.append("avatar", file);
 
         // สมมติ backend มี endpoint อัพโหลดไฟล์รูปภาพ
-        const uploadRes = await axios.post("/api/user/upload-avatar", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
-        });
-
-        avatarUrl = uploadRes.data.avatarUrl; // ได้ URL รูปจาก backend
+        const uploadRes = await axios.post(
+          "/api/user/upload-avatar",
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
+        console.log(uploadRes);
+        avatarUrl = uploadRes.data.avatar; // ได้ URL รูปจาก backend
       }
 
       // อัพเดตข้อมูลโปรไฟล์ (username, email, avatarUrl)
-      await axios.put(
+      await axios.patch(
         "/api/user/profile",
         {
           username,
-          email,
           avatar: avatarUrl,
         },
         { withCredentials: true }
@@ -114,20 +128,6 @@ const SettingPage = ({ user }) => {
               className="input input-bordered w-full"
             />
           </div>
-
-          {/* ฟอร์ม email */}
-          <div className="form-control w-full">
-            <label className="label">
-              <span className="label-text text-black">Email</span>
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input input-bordered w-full"
-            />
-          </div>
-
           {/* ข้อความสถานะ */}
           {message && <p className="text-center mt-2">{message}</p>}
 
