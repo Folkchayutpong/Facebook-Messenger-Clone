@@ -52,14 +52,10 @@ async function updateUserProfileService(userId, updateFields) {
 
 function getFilePathFromUrl(url, bucketName) {
   // https://storage.googleapis.com/{bucket}/{path}
-  return url.replace(
-    `https://storage.googleapis.com/${bucketName}/`,
-    ""
-  );
+  return url.replace(`https://storage.googleapis.com/${bucketName}/`, "");
 }
 
 async function uploadAvatarService(userId, uploadedFile) {
-  
   if (!uploadedFile) {
     throw new Error("No file uploaded");
   }
@@ -104,9 +100,23 @@ async function uploadAvatarService(userId, uploadedFile) {
     stream.end(uploadedFile.buffer);
   });
 }
+
+async function searchUsersService({ keyword, currentUserId }) {
+  if (!keyword) return [];
+
+  const users = await User.find({
+    _id: { $ne: currentUserId },
+    username: { $regex: keyword, $options: "i" },
+  })
+    .select("username avatar")
+    .limit(10);
+
+  return users;
+}
 module.exports = {
   registerService,
   loginService,
   updateUserProfileService,
   uploadAvatarService,
+  searchUsersService,
 };

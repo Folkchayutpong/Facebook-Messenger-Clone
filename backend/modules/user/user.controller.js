@@ -125,12 +125,29 @@ async function updateUserProfile(req, res) {
     res.status(500).json({ message: "Server error" });
   }
 }
+
+async function searchUsers(req, res) {
+  try {
+    const { username } = req.query;
+
+    const users = await userService.searchUsersService({
+      keyword: username,
+      currentUserId: req.user.id,
+    });
+
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
 module.exports = {
   register,
   login,
   getUserProfile,
   getUserProfileById,
   updateUserProfile,
-  uploadAvatar
+  uploadAvatar,
+  searchUsers
   
 };

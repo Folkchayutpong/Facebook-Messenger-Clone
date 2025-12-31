@@ -10,6 +10,8 @@ router.get("/profile", expressAuthMiddleware, userController.getUserProfile);
 router.get("/profile/:id",expressAuthMiddleware,userController.getUserProfileById);
 router.post("/upload-avatar", expressAuthMiddleware, upload.single("avatar"), userController.uploadAvatar);
 router.patch("/profile", expressAuthMiddleware, userController.updateUserProfile);
+router.get("/search",expressAuthMiddleware,userController.searchUsers);
+
 
 
 module.exports = router;
