@@ -1,6 +1,6 @@
 import FriendChats from "../components/friend_chats";
-import ConfigChat from "../components/config_chat";
-import Sidebar from "../components/sidebar"
+import RightPanel from "../components/Right_panel";
+import Sidebar from "../components/sidebar";
 import Chat from "../components/chat";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -17,6 +17,7 @@ const MainPage = () => {
   const [friendChats, setFriendChats] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [curUser, setCurUser] = useState(null);
+  const [showAddFriend, setShowAddFriend] = useState(false);
 
   // Connect websocket to all freindlist that user has
   useEffect(() => {
@@ -54,9 +55,8 @@ const MainPage = () => {
   };
 
   return (
-   
     <div className="flex justify-center h-screen">
-      <Sidebar/>
+      <Sidebar />
       <FriendChats
         friendChats={friendChats}
         onSelectFriend={handleSelectFriend}
@@ -68,7 +68,10 @@ const MainPage = () => {
         user={curUser}
         socket={socket}
       />
-      <ConfigChat />
+      <RightPanel
+        showAddFriend={showAddFriend}
+        setShowAddFriend={setShowAddFriend}
+      />
     </div>
   );
 };
