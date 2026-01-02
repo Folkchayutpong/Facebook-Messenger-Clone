@@ -23,11 +23,11 @@ const AddFriendPanel = ({ onClose }) => {
   }, [keyword]);
 
   const handleAddFriend = async (userId) => {
-    await axios.post("/api/friend/add", { userId }, { withCredentials: true });
+    await axios.post("/api/friend/add", { targetId: userId }, { withCredentials: true });
 
     setUsers((prev) =>
       prev.map((u) =>
-        u._id === userId ? { ...u, friendStatus: "Pending" } : u
+        u._id === userId ? { ...u, friendStatus: "pending" } : u
       )
     );
   };

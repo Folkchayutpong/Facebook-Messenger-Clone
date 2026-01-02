@@ -155,19 +155,19 @@ async function declineService(ownerId, requesterId) {
 }
 
 async function getFriendList(userId) {
-  const list = await FriendList.findOne({ owner: userId }).populate("friends", "_id name email avatar");
+  const list = await FriendList.findOne({ owner: userId }).populate("friends", "_id username email avatar");
   if (!list) throw new Error("Friend list not found");
   return list.friends;
 }
 
 async function getInboundList(userId) {
-  const list = await FriendList.findOne({ owner: userId }).populate("inbound", "_id name email avatar");
+  const list = await FriendList.findOne({ owner: userId }).populate("inbound", "_id username email avatar");
   if (!list) throw new Error("Inbound list not found");
   return list.inbound;
 }
 
 async function getOutboundList(userId) {
-  const list = await FriendList.findOne({ owner: userId }).populate("outbound", "_id name email avatar");
+  const list = await FriendList.findOne({ owner: userId }).populate("outbound", "_id username email avatar");
   if (!list) throw new Error("Outbound list not found");
   return list.outbound;
 }
