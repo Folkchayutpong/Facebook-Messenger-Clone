@@ -4,14 +4,10 @@ import Sidebar from "../components/sidebar";
 import Chat from "../components/chat";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { io } from "socket.io-client";
+import { socket } from "../socket";
 
-//innit socket
-const socket = io("http://localhost:5000", {
-  withCredentials: true,
-  transports: ["websocket", "polling"],
-  autoConnect: true,
-});
+
+
 
 const MainPage = () => {
   const [friendChats, setFriendChats] = useState([]);
@@ -19,21 +15,24 @@ const MainPage = () => {
   const [curUser, setCurUser] = useState(null);
   const [showAddFriend, setShowAddFriend] = useState(false);
 
-  // Connect websocket to all freindlist that user has
   useEffect(() => {
-    socket.on("connect", () => {
-      axios.get("/api/chats", { withCredentials: true }).then((res) => {
-        res.data.forEach((chat) => {
-          socket.emit("join_chat", chat._id);
-          console.log(`Joined chat ${chat._id} successfully`);
-        });
-      });
-    });
+  socket.connect();
 
-    return () => {
-      socket.off("connect");
-    };
-  }, [socket]);
+  return () => {
+    socket.disconnect();
+  };
+}, []);
+
+  // Connect websocket to all freindlist that user has
+useEffect(() => {
+  axios.get("/api/chats", { withCredentials: true }).then((res) => {
+    res.data.forEach((chat) => {
+      socket.emit("join_chat", chat._id);
+      console.log(`Joined chat ${chat._id}`);
+    });
+  });
+}, []);
+
 
   // Load friend chats
   useEffect(() => {

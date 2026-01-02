@@ -1,4 +1,3 @@
-const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie");
 const Message = require("../message/message.model");
@@ -8,13 +7,14 @@ const { socketAuthMiddleware } = require("../../middleware/auth");
 const { timeStr } = require("../../utils/utils");
 const now = new Date();
 
-function initSocket(server) {
-  const io = new Server(server);
-
-  io.use(socketAuthMiddleware);
+function initSocket(io) {
+    io.use(socketAuthMiddleware);
 
   io.on("connection", (socket) => {
     console.log("✅ New socket connected:", socket.user.username);
+    
+    const userId = socket.user._id.toString();
+    socket.join(`user:${userId}`);
 
     socket.on("join_chat", (chatId) => {
       socket.join(chatId);

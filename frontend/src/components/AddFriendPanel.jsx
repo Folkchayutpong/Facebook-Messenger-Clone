@@ -13,11 +13,9 @@ const AddFriendPanel = ({ onClose }) => {
 
     const delay = setTimeout(() => {
       axios
-        .get(`/api/user/search?username=${keyword}`, {
-          withCredentials: true,
-        })
+        .get(`/api/user/search?username=${keyword}`, { withCredentials: true })
         .then((res) => setUsers(res.data));
-    }, 300); // debounce
+    }, 300);
 
     return () => clearTimeout(delay);
   }, [keyword]);
