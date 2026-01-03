@@ -4,6 +4,7 @@ import RegisterPage from "./pages/RegisterPage";
 import WelcomePage from "./pages/WelcomePage";
 import MainPage from "./pages/MainPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SettingPage from "./pages/SettingPage";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/setting" element={<SettingPage />} />
       </Routes>
     </Router>
   );

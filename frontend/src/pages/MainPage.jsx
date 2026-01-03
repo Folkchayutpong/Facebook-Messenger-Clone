@@ -1,9 +1,10 @@
 import FriendChats from "../components/friend_chats";
-import ConfigChat from "../components/config_chat";
+import RightPanel from "../components/Right_panel";
+import Sidebar from "../components/sidebar";
 import Chat from "../components/chat";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { io } from "socket.io-client";
+import { socket } from "../socket";
 
 const MainPage = () => {
   const [friendChats, setFriendChats] = useState([]);
@@ -11,58 +12,52 @@ const MainPage = () => {
   const [curUser, setCurUser] = useState(null);
   const [lastMessageMap, setLastMessageMap] = useState({});
   const [socketReady, setSocketReady] = useState(false);
+  const [showAddFriend, setShowAddFriend] = useState(false);
   const socketRef = useRef(null);
 
   // Initialize socket
   useEffect(() => {
-    const socket = io("http://localhost:5000", {
-      withCredentials: true,
-      transports: ["websocket", "polling"],
-      autoConnect: true,
-    });
-
     socketRef.current = socket;
 
     socket.on("connect", async () => {
-      console.log("Socket connected");
-
+      console.log("✅ Socket connected!");
       try {
-        // Fetch chats
         const res = await axios.get("/api/chats", { withCredentials: true });
-
-        // Join all chats
-        res.data.forEach((chat) => {
-          socket.emit("join_chat", chat._id);
-        });
-
+        res.data.forEach((chat) => socket.emit("join_chat", chat._id));
         setSocketReady(true);
-        console.log("Socket ready and joined all chats");
       } catch (err) {
         console.error("Error joining chats:", err);
       }
     });
 
+    // ✅ ฟัง chat:created
+    socket.on("chat:created", async ({ chatId }) => {
+      console.log("💬 New chat created:", chatId);
+      socket.emit("join_chat", chatId);
+
+      // Refresh chat list
+      const res = await axios.get("/api/chats", { withCredentials: true });
+      setFriendChats(res.data);
+    });
+
     socket.on("disconnect", () => {
-      console.log("Socket disconnected");
+      console.log("❌ Socket disconnected");
       setSocketReady(false);
     });
 
     return () => {
       socket.off("connect");
       socket.off("disconnect");
-      socket.disconnect();
+      socket.off("chat:created");
     };
   }, []);
 
-  // Listen for new messages and update lastMessageMap
+  // Listen for new messages
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket) return;
 
     const handleReceiveMessage = (message) => {
-      console.log("Received message in MainPage:", message);
-
-      // Update the last message for this chat
       setLastMessageMap((prev) => ({
         ...prev,
         [message.chatId]: {
@@ -100,6 +95,7 @@ const MainPage = () => {
 
   return (
     <div className="flex justify-center h-screen">
+      <Sidebar />
       <FriendChats
         friendChats={friendChats}
         onSelectFriend={handleSelectFriend}
@@ -107,6 +103,7 @@ const MainPage = () => {
         lastMessageMap={lastMessageMap}
         setLastMessageMap={setLastMessageMap}
         socket={socketRef.current}
+        setFriendChats={setFriendChats}
       />
       <Chat
         friendChat={selectedFriend}
@@ -114,7 +111,11 @@ const MainPage = () => {
         socket={socketRef.current}
         socketReady={socketReady}
       />
-      <ConfigChat />
+      <RightPanel
+        showAddFriend={showAddFriend}
+        setShowAddFriend={setShowAddFriend}
+        socket={socketRef.current}
+      />
     </div>
   );
 };

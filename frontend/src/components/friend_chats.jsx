@@ -13,6 +13,7 @@ const FriendChats = ({
   lastMessageMap,
   setLastMessageMap,
   socket,
+  setFriendChats, // ✅ เพิ่ม prop นี้
 }) => {
   const [friendNameMap, setFriendNameMap] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,11 +27,18 @@ const FriendChats = ({
       try {
         const entries = await Promise.all(
           friendChats.map(async (chat) => {
-            const friendId = chat.members.find((id) => id !== curUser._id);
+            const friend = chat.members.find(
+              (member) =>
+                (typeof member === "string" ? member : member._id) !==
+                curUser._id
+            );
 
-            if (!friendId) return [chat._id, ""];
+            if (!friend) return [chat._id, "Unknown"];
 
-            const res = await axios.get(`/api/user/profile/${friendId}`, {
+            const friendIdString =
+              typeof friend === "string" ? friend : friend._id;
+
+            const res = await axios.get(`/api/user/profile/${friendIdString}`, {
               withCredentials: true,
             });
 
@@ -40,12 +48,34 @@ const FriendChats = ({
 
         setFriendNameMap(Object.fromEntries(entries));
       } catch (err) {
-        console.error(err);
+        console.error("fetchFriends error:", err);
       }
     };
 
     fetchFriends();
   }, [friendChats, curUser]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleChatCreated = async ({ chatId }) => {
+      console.log("💬 New chat created:", chatId);
+      socket.emit("join_chat", chatId);
+
+      try {
+        const res = await axios.get("/api/chats", { withCredentials: true });
+        setFriendChats(res.data);
+      } catch (err) {
+        console.error("Failed to refresh chats:", err);
+      }
+    };
+
+    socket.on("chat:created", handleChatCreated);
+
+    return () => {
+      socket.off("chat:created", handleChatCreated);
+    };
+  }, [socket, setFriendChats]);
 
   // Fetch last messages initially
   useEffect(() => {

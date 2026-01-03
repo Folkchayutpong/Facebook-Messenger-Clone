@@ -1,4 +1,3 @@
-const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie");
 const Message = require("../message/message.model");
@@ -7,13 +6,14 @@ const User = require("../user/user.model");
 const { socketAuthMiddleware } = require("../../middleware/auth");
 const { timeStr } = require("../../utils/utils");
 
-function initSocket(server) {
-  const io = new Server(server);
-
+function initSocket(io) {
   io.use(socketAuthMiddleware);
 
   io.on("connection", (socket) => {
     console.log("✅ New socket connected:", socket.user.username);
+
+    const userId = socket.user._id.toString();
+    socket.join(`user:${userId}`);
 
     socket.on("join_chat", (chatId) => {
       socket.join(chatId);
@@ -22,7 +22,6 @@ function initSocket(server) {
 
     socket.on("send_message", async (msg) => {
       try {
-        // ใช้ Date.now() แทน const now ที่ declare ข้างนอก
         const now = new Date();
         console.log("Sending message at:", now);
 
@@ -37,7 +36,6 @@ function initSocket(server) {
 
         const populated = await newMessage.populate("sender", "username");
 
-        // ส่ง message ไปยังทุกคนใน chat room รวมถึงคนส่งด้วย
         io.to(msg.chatId).emit("receive_message", {
           _id: newMessage._id,
           chatId: msg.chatId,
@@ -49,15 +47,12 @@ function initSocket(server) {
         });
       } catch (err) {
         console.error("❌ Error sending message:", err.message);
-
-        // ส่ง error กลับไปให้ client
         socket.emit("message_error", {
           error: "Failed to send message",
           details: err.message,
         });
       }
     });
-
     socket.on("disconnect", () => {
       console.log("🔌 Socket disconnected:", socket.user.username);
     });

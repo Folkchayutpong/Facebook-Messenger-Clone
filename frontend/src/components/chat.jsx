@@ -40,8 +40,8 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
         setChatMessages(messagesRes.data.messages);
 
         const memberResponses = await Promise.all(
-          memberIds.map((id) =>
-            axios.get(`/api/user/profile/${id}`, {
+          memberIds.map((member) =>
+            axios.get(`/api/user/profile/${member._id || member}`, {
               withCredentials: true,
             })
           )
@@ -89,7 +89,6 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
     };
 
     setChatMessages((prev) => [...prev, tempMessage]);
-    console.log("Sending message:", msg);
     socket.emit("send_message", msg);
     setNewMessage("");
   };

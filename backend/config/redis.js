@@ -1,5 +1,4 @@
 const { createClient } = require("redis");
-require("dotenv").config();
 
 const redisClient = createClient({
   url: `redis://redis:${process.env.REDIS_PORT}`,
