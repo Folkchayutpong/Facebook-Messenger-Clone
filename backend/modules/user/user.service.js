@@ -1,4 +1,5 @@
 const User = require("./user.model");
+const FriendList = require("../friend/friend.model");
 const argon2 = require("argon2");
 const { bucket } = require("../../config/firebase");
 const path = require("path");
@@ -52,14 +53,10 @@ async function updateUserProfileService(userId, updateFields) {
 
 function getFilePathFromUrl(url, bucketName) {
   // https://storage.googleapis.com/{bucket}/{path}
-  return url.replace(
-    `https://storage.googleapis.com/${bucketName}/`,
-    ""
-  );
+  return url.replace(`https://storage.googleapis.com/${bucketName}/`, "");
 }
 
 async function uploadAvatarService(userId, uploadedFile) {
-  
   if (!uploadedFile) {
     throw new Error("No file uploaded");
   }
@@ -104,9 +101,45 @@ async function uploadAvatarService(userId, uploadedFile) {
     stream.end(uploadedFile.buffer);
   });
 }
+
+async function searchUsersService({ keyword, currentUserId }) {
+  const users = await User.find({
+    _id: { $ne: currentUserId },
+    username: { $regex: keyword, $options: "i" },
+  });
+
+  // หา FriendList ของ currentUser
+  const myFriendList = await FriendList.findOne({ owner: currentUserId });
+
+  return users.map((u) => {
+    let status = "none";
+
+    if (myFriendList) {
+      // เช็คว่าเป็นเพื่อนแล้ว
+      if (myFriendList.friends.some(friendId => friendId.equals(u._id))) {
+        status = "friend";
+      }
+      // เช็คว่ากำลังรอการตอบรับ (เราส่งคำขอไป)
+      else if (myFriendList.outbound.some(friendId => friendId.equals(u._id))) {
+        status = "pending";
+      }
+      // เช็คว่ามีคำขอเข้ามา (เขาส่งมาหาเรา)
+      else if (myFriendList.inbound.some(friendId => friendId.equals(u._id))) {
+        status = "pending";
+      }
+    }
+
+    return {
+      _id: u._id,
+      username: u.username,
+      friendStatus: status,
+    };
+  });
+}
 module.exports = {
   registerService,
   loginService,
   updateUserProfileService,
   uploadAvatarService,
+  searchUsersService,
 };

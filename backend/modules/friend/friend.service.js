@@ -39,8 +39,8 @@ async function addService(ownerId, targetId) {
     targetList.inbound.push(ownerId);
 
     await Promise.all([ownerList.save(), targetList.save()]);
-
-    return { message: "Request sent" };
+    const ownerUser  = await User.findById(ownerId).select("_id username avatar");
+    return ownerUser ;
   } catch (error) {
     throw new Error(error.message);
   }
@@ -71,7 +71,7 @@ async function removeService(ownerId, targetId) {
       ownerList.friends.length === oldOwnerCount &&
       targetList.friends.length === oldTargetCount
     ) {
-      return { message: "Users were not friends" };
+      throw new Error("Users were not friends");
     }
 
     eventBus.emit("RemovePrivateChatService", {
@@ -80,7 +80,7 @@ async function removeService(ownerId, targetId) {
     });
 
     await Promise.all([ownerList.save(), targetList.save()]);
-
+    await User.findById(targetId).select("_id username avatar");
     return { message: "Friend removed" };
   } catch (error) {
     throw new Error(error.message);
@@ -113,8 +113,8 @@ async function acceptService(ownerId, requesterId) {
     await Promise.all([ownerList.save(), requesterList.save()]);
 
      const [ownerUser, requesterUser] = await Promise.all([
-      User.findById(ownerId).select("username"),
-      User.findById(requesterId).select("username"),
+      User.findById(ownerId).select("_id username avatar"),
+      User.findById(requesterId).select("_id username avatar"),
     ]);
 
     //send event to create chat
@@ -125,7 +125,7 @@ async function acceptService(ownerId, requesterId) {
       receiverName: requesterUser.username,
     });
 
-    return { message: "Friend request accepted" };
+    return { ownerUser, requesterUser};
   } catch (error) {
     throw new Error(error.message);
   }
@@ -147,27 +147,27 @@ async function declineService(ownerId, requesterId) {
       (id) => id.toString() !== ownerId.toString()
     );
     await Promise.all([ownerList.save(), requesterList.save()]);
-
-    return { message: "Friend request declined" };
+    const ownerUser = await User.findById(ownerId).select("_id username avatar");
+    return ownerUser;
   } catch (error) {
     throw new Error(error.message);
   }
 }
 
 async function getFriendList(userId) {
-  const list = await FriendList.findOne({ owner: userId }).populate("friends", "_id name email avatar");
+  const list = await FriendList.findOne({ owner: userId }).populate("friends", "_id username email avatar");
   if (!list) throw new Error("Friend list not found");
   return list.friends;
 }
 
 async function getInboundList(userId) {
-  const list = await FriendList.findOne({ owner: userId }).populate("inbound", "_id name email avatar");
+  const list = await FriendList.findOne({ owner: userId }).populate("inbound", "_id username email avatar");
   if (!list) throw new Error("Inbound list not found");
   return list.inbound;
 }
 
 async function getOutboundList(userId) {
-  const list = await FriendList.findOne({ owner: userId }).populate("outbound", "_id name email avatar");
+  const list = await FriendList.findOne({ owner: userId }).populate("outbound", "_id username email avatar");
   if (!list) throw new Error("Outbound list not found");
   return list.outbound;
 }

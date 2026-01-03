@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
 
 async function add(req, res) {
+  const io = req.app.get("io");
   const ownerId = req.user.id;
   const { targetId } = req.body;
 
@@ -18,8 +19,9 @@ async function add(req, res) {
     const ownerObjId = new ObjectId(ownerId);
     const targetObjId = new ObjectId(targetId);
     console.log(ownerObjId, targetObjId);
-    const result = await friendService.addService(ownerObjId, targetObjId);
-    res.status(200).json(result);
+    const ownerUser = await friendService.addService(ownerObjId, targetObjId);
+    io.to(`user:${targetId}`).emit("friend:inbound", ownerUser);
+    res.status(200).json({ message: "Request sent" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
@@ -27,6 +29,7 @@ async function add(req, res) {
 }
 
 async function remove(req, res) {
+  const io = req.app.get("io");
   const ownerId = req.user.id;
   const { targetId } = req.body;
 
@@ -43,14 +46,17 @@ async function remove(req, res) {
   try {
     const ownerObjId = new ObjectId(ownerId);
     const targetObjId = new ObjectId(targetId);
-    const result = await friendService.removeService(ownerObjId, targetObjId);
-    res.status(200).json(result);
+    await friendService.removeService(ownerObjId, targetObjId);
+    io.to(`user:${ownerId}`).emit("friend:removed", targetId);
+    io.to(`user:${targetId}`).emit("friend:removed", ownerId);
+    res.status(200).json({ message: "Friend removed" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 }
 
 async function accept(req, res) {
+  const io = req.app.get("io");
   const ownerId = req.user.id;
   const { requesterId } = req.body;
 
@@ -67,17 +73,20 @@ async function accept(req, res) {
   try {
     const ownerObjId = new ObjectId(ownerId);
     const requesterObjId = new ObjectId(requesterId);
-    const result = await friendService.acceptService(
+    const { ownerUser, requesterUser } = await friendService.acceptService(
       ownerObjId,
       requesterObjId
     );
-    res.status(200).json(result);
+    io.to(`user:${ownerId}`).emit("friend:accepted", requesterUser);
+    io.to(`user:${requesterId}`).emit("friend:accepted", ownerUser);
+    res.status(200).json({ message: "Friend request accepted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 }
 
 async function decline(req, res) {
+  const io = req.app.get("io");
   const ownerId = req.user.id;
   const { requesterId } = req.body;
 
@@ -94,11 +103,8 @@ async function decline(req, res) {
   try {
     const ownerObjId = new ObjectId(ownerId);
     const requesterObjId = new ObjectId(requesterId);
-    const result = await friendService.declineService(
-      ownerObjId,
-      requesterObjId
-    );
-    res.status(200).json(result);
+    await friendService.declineService(ownerObjId, requesterObjId);
+    res.status(200).json({ message: "Friend request declined" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -152,5 +158,5 @@ module.exports = {
   decline,
   getFriend,
   getInbound,
-  getOutbound
+  getOutbound,
 };
