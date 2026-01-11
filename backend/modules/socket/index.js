@@ -10,10 +10,11 @@ function initSocket(io) {
   io.use(socketAuthMiddleware);
 
   io.on("connection", (socket) => {
-    console.log("✅ New socket connected:", socket.user.username);
+    console.log("New socket connected:", socket.user.username);
 
     const userId = socket.user._id.toString();
     socket.join(`user:${userId}`);
+    console.log(`User ${userId} joined room: user:${userId}`);
 
     socket.on("join_chat", (chatId) => {
       socket.join(chatId);
@@ -46,7 +47,7 @@ function initSocket(io) {
           sentAt: newMessage.sentAt,
         });
       } catch (err) {
-        console.error("❌ Error sending message:", err.message);
+        console.error("Error sending message:", err.message);
         socket.emit("message_error", {
           error: "Failed to send message",
           details: err.message,

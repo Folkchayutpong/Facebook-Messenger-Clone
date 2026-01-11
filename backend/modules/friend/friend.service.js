@@ -47,7 +47,6 @@ async function addService(ownerId, targetId) {
     throw new Error(error.message);
   }
 }
-
 async function removeService(ownerId, targetId) {
   try {
     if (ownerId === targetId) throw new Error("Cannot unfriend yourself");
@@ -75,11 +74,6 @@ async function removeService(ownerId, targetId) {
     ) {
       throw new Error("Users were not friends");
     }
-
-    eventBus.emit("RemovePrivateChatService", {
-      senderId: ownerId,
-      receiverId: targetId,
-    });
 
     await Promise.all([ownerList.save(), targetList.save()]);
     await User.findById(targetId).select("_id username avatar");
@@ -118,14 +112,6 @@ async function acceptService(ownerId, requesterId) {
       User.findById(ownerId).select("_id username avatar"),
       User.findById(requesterId).select("_id username avatar"),
     ]);
-
-    //send event to create chat
-    eventBus.emit("CreatePrivateChatService", {
-      senderId: ownerId,
-      senderName: ownerUser.username,
-      receiverId: requesterId,
-      receiverName: requesterUser.username,
-    });
 
     return { ownerUser, requesterUser };
   } catch (error) {

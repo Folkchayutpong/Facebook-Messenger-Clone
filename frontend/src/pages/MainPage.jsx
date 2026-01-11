@@ -20,7 +20,6 @@ const MainPage = () => {
     socketRef.current = socket;
 
     socket.on("connect", async () => {
-      console.log("✅ Socket connected!");
       try {
         const res = await axios.get("/api/chats", { withCredentials: true });
         res.data.forEach((chat) => socket.emit("join_chat", chat._id));
@@ -30,9 +29,7 @@ const MainPage = () => {
       }
     });
 
-    // ✅ ฟัง chat:created
     socket.on("chat:created", async ({ chatId }) => {
-      console.log("💬 New chat created:", chatId);
       socket.emit("join_chat", chatId);
 
       // Refresh chat list
@@ -40,8 +37,17 @@ const MainPage = () => {
       setFriendChats(res.data);
     });
 
+    socket.on("chat:removed", ({ chatId }) => {
+
+      setFriendChats((prev) => prev.filter((chat) => chat._id !== chatId));
+
+      setSelectedFriend((current) =>
+        current?._id === chatId ? null : current
+      );
+    });
+
     socket.on("disconnect", () => {
-      console.log("❌ Socket disconnected");
+      console.log("Socket disconnected");
       setSocketReady(false);
     });
 
@@ -49,6 +55,7 @@ const MainPage = () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("chat:created");
+      socket.off("chat:removed");
     };
   }, []);
 

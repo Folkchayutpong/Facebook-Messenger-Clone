@@ -1,6 +1,9 @@
 const friendService = require("./friend.service");
 const mongoose = require("mongoose");
 const ObjectId = mongoose.Types.ObjectId;
+const chatService = require("../chat/chat.service");
+const Chat = require("../chat/chat.model");
+const messageService = require("../message/message.service");
 
 async function add(req, res) {
   const io = req.app.get("io");
@@ -46,11 +49,35 @@ async function remove(req, res) {
   try {
     const ownerObjId = new ObjectId(ownerId);
     const targetObjId = new ObjectId(targetId);
+
+    const chat = await Chat.findOne({
+      type: "private",
+      members: { $all: [ownerObjId, targetObjId] },
+    });
+
+
     await friendService.removeService(ownerObjId, targetObjId);
+
+
+    if (chat) {
+      await messageService.deleteMessagesByChatId(chat._id);
+
+      await chatService.deleteChat(chat._id);
+
+      io.to(`user:${ownerId}`).emit("chat:removed", {
+        chatId: chat._id.toString(),
+      });
+      io.to(`user:${targetId}`).emit("chat:removed", {
+        chatId: chat._id.toString(),
+      });
+    }
+
     io.to(`user:${ownerId}`).emit("friend:removed", targetId);
     io.to(`user:${targetId}`).emit("friend:removed", ownerId);
+
     res.status(200).json({ message: "Friend removed" });
   } catch (err) {
+    console.error("Error removing friend:", err);
     res.status(500).json({ message: err.message });
   }
 }
@@ -70,6 +97,7 @@ async function accept(req, res) {
       .json({ message: "Cannot accept request on yourself" });
   }
 
+
   try {
     const ownerObjId = new ObjectId(ownerId);
     const requesterObjId = new ObjectId(requesterId);
@@ -79,31 +107,37 @@ async function accept(req, res) {
       requesterObjId
     );
 
-    const existingChat = await Chat.findOne({
+    let chat = await Chat.findOne({
       type: "private",
       members: { $all: [ownerObjId, requesterObjId] },
     });
 
-    let chatId;
-    if (!existingChat) {
-      const newChat = await Chat.create({
+    if (!chat) {
+      chat = await Chat.create({
         type: "private",
+        name: `${ownerUser.username} and ${requesterUser.username}`,
         members: [ownerObjId, requesterObjId],
       });
-      chatId = newChat._id;
-      console.log("💬 Created new chat:", chatId);
     } else {
-      chatId = existingChat._id;
+      console.log("Chat already exists:", chat._id);
     }
 
     io.to(`user:${ownerId}`).emit("friend:accepted", requesterUser);
     io.to(`user:${requesterId}`).emit("friend:accepted", ownerUser);
 
-    io.to(`user:${ownerId}`).emit("chat:created", { chatId });
-    io.to(`user:${requesterId}`).emit("chat:created", { chatId });
+    io.to(`user:${ownerId}`).emit("chat:created", {
+      chatId: chat._id.toString(),
+    });
+    io.to(`user:${requesterId}`).emit("chat:created", {
+      chatId: chat._id.toString(),
+    });
 
-    res.status(200).json({ message: "Friend request accepted" });
+    res.status(200).json({
+      message: "Friend request accepted",
+      chatId: chat._id.toString(),
+    });
   } catch (err) {
+    console.error(" Error accepting friend:", err);
     res.status(500).json({ message: err.message });
   }
 }

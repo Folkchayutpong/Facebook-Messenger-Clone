@@ -55,8 +55,9 @@ async function createGroupChatService(name, members, type, admins) {
 //get all group chatService
 async function getChatsService(userId) {
   try {
-    const result = await Chats.find({ members: userId }).populate("members", "username email")
-    .sort({ updatedAt: -1 });
+    const result = await Chats.find({ members: userId })
+      .populate("members", "username email")
+      .sort({ updatedAt: -1 });
     return result;
   } catch (err) {
     throw new Error(err.message);
@@ -137,10 +138,6 @@ async function deleteChat(chatId) {
 
     if (!chat) {
       throw new Error("Chat not found");
-    }
-
-    if (chat.type === "private") {
-      throw new Error("Cannot delete private chat");
     }
 
     const deleted = await Chats.findOneAndDelete({ _id: chatId });

@@ -55,28 +55,6 @@ const FriendChats = ({
     fetchFriends();
   }, [friendChats, curUser]);
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleChatCreated = async ({ chatId }) => {
-      console.log("💬 New chat created:", chatId);
-      socket.emit("join_chat", chatId);
-
-      try {
-        const res = await axios.get("/api/chats", { withCredentials: true });
-        setFriendChats(res.data);
-      } catch (err) {
-        console.error("Failed to refresh chats:", err);
-      }
-    };
-
-    socket.on("chat:created", handleChatCreated);
-
-    return () => {
-      socket.off("chat:created", handleChatCreated);
-    };
-  }, [socket, setFriendChats]);
-
   // Fetch last messages initially
   useEffect(() => {
     if (!friendChats?.length) return;

@@ -9,12 +9,15 @@ const InboundRequestsPanel = ({ inbound, setInbound, socket }) => {
         { withCredentials: true }
       );
 
+      if (socket) {
+        socket.emit("friend:accept", { friendId: userId });
+      }
+
       // Optimistic update
       setInbound((prev) => prev.filter((u) => u._id !== userId));
 
-      console.log("✅ Accepted friend request from:", userId);
     } catch (err) {
-      console.error("❌ Failed to accept:", err);
+      console.error("Failed to accept:", err);
     }
   };
 
@@ -28,9 +31,8 @@ const InboundRequestsPanel = ({ inbound, setInbound, socket }) => {
 
       setInbound((prev) => prev.filter((u) => u._id !== userId));
 
-      console.log("❌ Declined friend request from:", userId);
     } catch (err) {
-      console.error("❌ Failed to decline:", err);
+      console.error("Failed to decline:", err);
     }
   };
 

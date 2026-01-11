@@ -47,4 +47,13 @@ async function deleteMessage(data) {
   }
 }
 
-module.exports = { createMessage, getMessages, editMessage, deleteMessage };
+async function deleteMessagesByChatId(chatId) {
+  try {
+    await Messages.deleteMany({ chatId });
+  } catch (error) {
+    console.error("Error deleting messages by chatId:", error);
+    throw error;
+  }
+}
+
+module.exports = { createMessage, getMessages, editMessage, deleteMessage, deleteMessagesByChatId };
