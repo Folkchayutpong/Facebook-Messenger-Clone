@@ -6,9 +6,11 @@ const User = require("../user/user.model");
 const { socketAuthMiddleware } = require("../../middleware/auth");
 const { timeStr } = require("../../utils/utils");
 
+// Socket.IO setup and event handling
 function initSocket(io) {
   io.use(socketAuthMiddleware);
 
+  // connecntion event
   io.on("connection", (socket) => {
     console.log("New socket connected:", socket.user.username);
 
@@ -21,10 +23,13 @@ function initSocket(io) {
       console.log(`User ${socket.user.username} joined chat ${chatId}`);
     });
 
+    // send message event
     socket.on("send_message", async (msg) => {
       try {
         const now = new Date();
         console.log("Sending message at:", now);
+
+        //TODO: Add message to Redis cache here
 
         const newMessage = await Message.create({
           chatId: msg.chatId,
@@ -35,8 +40,10 @@ function initSocket(io) {
           sentAt: timeStr(now),
         });
 
+        // TODO: Populate using Redis cache with new message here
         const populated = await newMessage.populate("sender", "username");
 
+        // receive message event
         io.to(msg.chatId).emit("receive_message", {
           _id: newMessage._id,
           chatId: msg.chatId,

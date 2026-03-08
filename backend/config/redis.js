@@ -1,5 +1,7 @@
 const { createClient } = require("redis");
 
+// Create Redis for message here
+
 const redisClient = createClient({
   url: `redis://redis:${process.env.REDIS_PORT}`,
 });
