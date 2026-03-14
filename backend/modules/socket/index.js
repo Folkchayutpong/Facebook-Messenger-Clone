@@ -1,10 +1,9 @@
-const jwt = require("jsonwebtoken");
-const cookie = require("cookie");
 const Message = require("../message/message.model");
 const Chat = require("../chat/chat.model");
 const User = require("../user/user.model");
 const { socketAuthMiddleware } = require("../../middleware/auth");
 const { timeStr } = require("../../utils/utils");
+const { redisCache } = require("../../config/redis");
 
 // Socket.IO setup and event handling
 function initSocket(io) {
@@ -29,8 +28,6 @@ function initSocket(io) {
         const now = new Date();
         console.log("Sending message at:", now);
 
-        //TODO: Add message to Redis cache here
-
         const newMessage = await Message.create({
           chatId: msg.chatId,
           content: msg.content,
@@ -40,16 +37,20 @@ function initSocket(io) {
           sentAt: timeStr(now),
         });
 
-        // TODO: Populate using Redis cache with new message here
-        const populated = await newMessage.populate("sender", "username");
+        //Add message to Redis cache here
+        const redisKey = `chat:messages:${msg.chatId}`;
+        await redisCache.rPush(redisKey, JSON.stringify(newMessage));
+        await redisCache.expire(redisKey, 60 * 60 * 24); // 1 days expire
+        await redisCache.lTrim(redisKey, -50, -1); //50 mnessages
+        console.log("Cached message to redis:", redisKey);
 
         // receive message event
         io.to(msg.chatId).emit("receive_message", {
           _id: newMessage._id,
           chatId: msg.chatId,
           content: newMessage.content,
-          sender: populated.sender._id,
-          senderName: populated.sender.username,
+          sender: socket.user._id,
+          senderName: socket.user.username,
           messageType: newMessage.messageType,
           sentAt: newMessage.sentAt,
         });

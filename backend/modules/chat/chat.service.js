@@ -6,7 +6,6 @@ eventBus.on("CreatePrivateChatService", async (data) => {
   try {
     const existing = await Chats.findOne({
       type: "private",
-      //TODO: find method to make this more efficient
       member: { $all: [data.senderId, data.receiverId] },
     });
 

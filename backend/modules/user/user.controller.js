@@ -53,13 +53,13 @@ async function login(req, res) {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, //change to true if use https
+      secure: process.env.NODE_ENV === "production", //change to true if use https
       sameSite: "Strict",
       maxAge: 60 * 60 * 1000,
     });
     res.status(200).json({ user: user });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(401).json({ message: error.message });
   }
 }
 async function getUserProfile(req, res) {
