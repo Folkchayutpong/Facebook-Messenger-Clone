@@ -1,4 +1,3 @@
-require("dotenv").config({ path: "./config/.env" });
 const app = require("./app");
 const http = require("http");
 const userRoute = require("./modules/user/user.route");

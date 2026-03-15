@@ -2,10 +2,6 @@ services:
   backend:
     env_file:
       - ./config/.env
-    environment:
-      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
     build:
       context: .
     container_name: express-backend
