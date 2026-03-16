@@ -2,7 +2,8 @@ name: CI
 on:
   push:
     branches:
-      - feature/chat
+      - deploy-test
+      - feature/*
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,33 +18,29 @@ jobs:
       - name: build frontend
         run: |
           cd frontend
-          npm ci
-          npm run build
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > .env.dev
 
       - name: create .env
         run: |
            mkdir -p backend/config
-            {
+           {
               echo "PORT=${{ secrets.PORT }}"
               echo "NODE_ENV=${{ secrets.NODE_ENV }}"
               echo "MONGODB_URL=${{ secrets.MONGODB_URL }}"
               echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
               echo "REDIS_HOST=${{ secrets.REDIS_HOST }}"
               echo "REDIS_PORT=${{ secrets.REDIS_PORT }}"
-              echo "REACT_APP_BACKEND=${{ secrets.REACT_APP_BACKEND }}"
               echo "FRONTEND=${{ secrets.FRONTEND }}"
-              echo "BACKEND=${{ secrets.BACKEND }}"
               echo "MONGO_URI_TEST=${{ secrets.MONGO_URI_TEST }}"
               echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}"
-            } > backend/config/.env
-      - name: Build backend
+           } > backend/config/.env.dev
+      - name: Build containers
         run: |
-          cd backend
-          docker compose build
+          docker compose -f docker-compose.dev.yaml build
      
       - name: Run Backend test
         run: |
-          cd backend
-          docker compose up -d
-          docker compose ps
-          docker compose down
+          docker compose -f docker-compose.dev.yaml up -d
+          sleep 10
+          docker compose -f docker-compose.dev.yaml ps
+          docker compose -f docker-compose.dev.yaml down
