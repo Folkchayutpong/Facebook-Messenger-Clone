@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { socket } from "../socket";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const LoginPage = () => {
       );
       const { token } = response.data;
       localStorage.setItem("token", token);
+      socket.connect();
       navigate("/messages");
     } catch (error) {
       setErrorMessage(error.response?.data?.msg || "Login failed");
