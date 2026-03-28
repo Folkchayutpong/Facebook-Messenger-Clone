@@ -5,6 +5,7 @@ const User = require("../modules/user/user.model");
 
 //authentication middleware
 const socketAuthMiddleware = async (socket, next) => {
+  console.log("cookie:", socket.handshake.headers?.cookie);
   const token = parseTokenFromCookie(socket.handshake.headers?.cookie);
   if (!token) return next(new Error("Missing token"));
 
