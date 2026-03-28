@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const AddFriendPanel = ({ onClose }) => {
+const AddFriendPanel = ({ onClose, socket }) => {
   const [keyword, setKeyword] = useState("");
   const [users, setUsers] = useState([]);
 
@@ -21,13 +21,28 @@ const AddFriendPanel = ({ onClose }) => {
   }, [keyword]);
 
   const handleAddFriend = async (userId) => {
-    await axios.post("/api/friend/add", { targetId: userId }, { withCredentials: true });
+    try {
+      await axios.post(
+        "/api/friend/add",
+        { targetId: userId },
+        { withCredentials: true }
+      );
 
-    setUsers((prev) =>
-      prev.map((u) =>
-        u._id === userId ? { ...u, friendStatus: "pending" } : u
-      )
-    );
+      // ✅ Emit socket event
+      if (socket) {
+        socket.emit("friend:send_request", { recipientId: userId });
+      }
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId ? { ...u, friendStatus: "pending" } : u
+        )
+      );
+
+      console.log("📤 Sent friend request to:", userId);
+    } catch (err) {
+      console.error("❌ Failed to add friend:", err);
+    }
   };
 
   return (

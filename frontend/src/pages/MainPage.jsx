@@ -2,37 +2,84 @@ import FriendChats from "../components/friend_chats";
 import RightPanel from "../components/Right_panel";
 import Sidebar from "../components/sidebar";
 import Chat from "../components/chat";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { socket } from "../socket";
-
-
-
 
 const MainPage = () => {
   const [friendChats, setFriendChats] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [curUser, setCurUser] = useState(null);
+  const [lastMessageMap, setLastMessageMap] = useState({});
+  const [socketReady, setSocketReady] = useState(false);
   const [showAddFriend, setShowAddFriend] = useState(false);
+  const socketRef = useRef(null);
 
+  // Initialize socket
   useEffect(() => {
-  socket.connect();
+    socketRef.current = socket;
 
-  return () => {
-    socket.disconnect();
-  };
-}, []);
-
-  // Connect websocket to all freindlist that user has
-useEffect(() => {
-  axios.get("/api/chats", { withCredentials: true }).then((res) => {
-    res.data.forEach((chat) => {
-      socket.emit("join_chat", chat._id);
-      console.log(`Joined chat ${chat._id}`);
+    socket.on("connect", async () => {
+      try {
+        const res = await axios.get("/api/chats", { withCredentials: true });
+        res.data.forEach((chat) => socket.emit("join_chat", chat._id));
+        setSocketReady(true);
+      } catch (err) {
+        console.error("Error joining chats:", err);
+      }
     });
-  });
-}, []);
 
+    socket.on("chat:created", async ({ chatId }) => {
+      socket.emit("join_chat", chatId);
+
+      // Refresh chat list
+      const res = await axios.get("/api/chats", { withCredentials: true });
+      setFriendChats(res.data);
+    });
+
+    socket.on("chat:removed", ({ chatId }) => {
+
+      setFriendChats((prev) => prev.filter((chat) => chat._id !== chatId));
+
+      setSelectedFriend((current) =>
+        current?._id === chatId ? null : current
+      );
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
+      setSocketReady(false);
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("chat:created");
+      socket.off("chat:removed");
+    };
+  }, []);
+
+  // Listen for new messages
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    const handleReceiveMessage = (message) => {
+      setLastMessageMap((prev) => ({
+        ...prev,
+        [message.chatId]: {
+          lastMessage: message.content,
+          senderName: message.senderName,
+        },
+      }));
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+    };
+  }, []);
 
   // Load friend chats
   useEffect(() => {
@@ -59,17 +106,22 @@ useEffect(() => {
       <FriendChats
         friendChats={friendChats}
         onSelectFriend={handleSelectFriend}
-        selectedFriend={selectedFriend}
+        curUser={curUser}
+        lastMessageMap={lastMessageMap}
+        setLastMessageMap={setLastMessageMap}
+        socket={socketRef.current}
+        setFriendChats={setFriendChats}
       />
       <Chat
         friendChat={selectedFriend}
-        // messages={chatMessages}
         user={curUser}
-        socket={socket}
+        socket={socketRef.current}
+        socketReady={socketReady}
       />
       <RightPanel
         showAddFriend={showAddFriend}
         setShowAddFriend={setShowAddFriend}
+        socket={socketRef.current}
       />
     </div>
   );

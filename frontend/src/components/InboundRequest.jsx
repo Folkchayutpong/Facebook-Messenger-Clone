@@ -1,22 +1,39 @@
 import axios from "axios";
 
-const InboundRequestsPanel = ({ inbound, setInbound }) => {
+const InboundRequestsPanel = ({ inbound, setInbound, socket }) => {
   const handleAccept = async (userId) => {
-    await axios.post(
-      "/api/friend/accept",
-      { requesterId: userId },
-      { withCredentials: true }
-    );
-    
+    try {
+      await axios.post(
+        "/api/friend/accept",
+        { requesterId: userId },
+        { withCredentials: true }
+      );
+
+      if (socket) {
+        socket.emit("friend:accept", { friendId: userId });
+      }
+
+      // Optimistic update
+      setInbound((prev) => prev.filter((u) => u._id !== userId));
+
+    } catch (err) {
+      console.error("Failed to accept:", err);
+    }
   };
 
   const handleDecline = async (userId) => {
-    await axios.post(
-      "/api/friend/decline",
-      { requesterId: userId },
-      { withCredentials: true }
-    );
-     setInbound((prev) => prev.filter((u) => u._id !== userId));
+    try {
+      await axios.post(
+        "/api/friend/decline",
+        { requesterId: userId },
+        { withCredentials: true }
+      );
+
+      setInbound((prev) => prev.filter((u) => u._id !== userId));
+
+    } catch (err) {
+      console.error("Failed to decline:", err);
+    }
   };
 
   return (

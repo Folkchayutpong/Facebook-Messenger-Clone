@@ -1,52 +1,53 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import logo from "../assets/select chat icon.png";
 
-const Chat = ({ user, friendChat, socket }) => {
+const Chat = ({ user, friendChat, socket, socketReady }) => {
   const [friendMap, setFriendMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const bottomRef = useRef(null);
+  const previousChatIdRef = useRef(null);
 
-  // Fetch messages
+  // Fetch messages and member profiles when chat changes
   useEffect(() => {
-    if (!friendChat?._id) return;
+    if (!friendChat?._id) {
+      setChatMessages([]);
+      setFriendMap({});
+      setLoading(true);
+      previousChatIdRef.current = null;
+      return;
+    }
 
-    const fetchMessages = async () => {
-      try {
-        const res = await axios.get(`/api/messages/${friendChat._id}`, {
-          withCredentials: true,
-        });
-        setChatMessages(res.data.messages);
-      } catch (err) {
-        console.error("Failed to fetch messages", err);
-      }
-    };
+    if (previousChatIdRef.current === friendChat._id) {
+      return;
+    }
 
-    fetchMessages();
-  }, [friendChat]);
-
-  console.log("chatMessages", chatMessages);
-
-  // Fetch member profiles
-  useEffect(() => {
+    previousChatIdRef.current = friendChat._id;
     setChatMessages([]);
-    if (!friendChat?._id) return;
-    const fetchMembers = async () => {
-      try {
-        setLoading(true);
-        const memberIds = friendChat?.members || [];
+    setLoading(true);
 
-        const responses = await Promise.all(
-          memberIds.map((id) =>
-            axios.get(`/api/user/profile/${id}`, {
+    const fetchData = async () => {
+      try {
+        const [messagesRes, memberIds] = await Promise.all([
+          axios.get(`/api/messages/${friendChat._id}`, {
+            withCredentials: true,
+          }),
+          Promise.resolve(friendChat?.members || []),
+        ]);
+
+        setChatMessages(messagesRes.data.messages);
+
+        const memberResponses = await Promise.all(
+          memberIds.map((member) =>
+            axios.get(`/api/user/profile/${member._id || member}`, {
               withCredentials: true,
             })
           )
         );
 
-        const memberProfiles = responses.map((res) => res.data);
-
+        const memberProfiles = memberResponses.map((res) => res.data);
         const friendOnly = memberProfiles.filter(
           (profile) => profile._id !== user._id
         );
@@ -57,35 +58,62 @@ const Chat = ({ user, friendChat, socket }) => {
 
         setFriendMap(map);
       } catch (err) {
-        console.error("Error fetching members", err);
+        console.error("Failed to fetch data", err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (friendChat?.members?.length) {
-      fetchMembers();
-    }
-  }, [friendChat, user]);
+    fetchData();
+  }, [friendChat?._id, user?._id]);
 
-  // Send message
   const onSubmit = () => {
-    if (!newMessage.trim() || !friendChat || !user) return;
+    if (!newMessage.trim() || !friendChat || !user || !socketReady) return;
+
     const msg = {
       chatId: friendChat._id,
       content: newMessage,
     };
 
-    console.log("Sending message:", msg);
+    const tempMessage = {
+      _id: `temp-${Date.now()}`,
+      chatId: friendChat._id,
+      content: newMessage,
+      sender: user._id,
+      senderName: user.username,
+      messageType: "text",
+      sentAt: new Date().toLocaleTimeString("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setChatMessages((prev) => [...prev, tempMessage]);
     socket.emit("send_message", msg);
     setNewMessage("");
   };
 
+  // Listen for new messages
   useEffect(() => {
     if (!socket) return;
-
     const handleReceiveMessage = (msg) => {
-      setChatMessages((prev) => [...prev, msg]);
+      if (msg.chatId === friendChat?._id) {
+        setChatMessages((prev) => {
+          const filteredPrev = prev.filter(
+            (m) =>
+              !(
+                m._id.toString().startsWith("temp-") &&
+                m.content === msg.content &&
+                m.sender === msg.sender
+              )
+          );
+
+          const exists = filteredPrev.some((m) => m._id === msg._id);
+          if (exists) return filteredPrev;
+
+          return [...filteredPrev, msg];
+        });
+      }
     };
 
     socket.on("receive_message", handleReceiveMessage);
@@ -93,14 +121,12 @@ const Chat = ({ user, friendChat, socket }) => {
     return () => {
       socket.off("receive_message", handleReceiveMessage);
     };
-  }, [socket]);
+  }, [socket, friendChat?._id]);
 
-  //auto bottom scroll when messages are updated
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  // Scroll to bottom when messages are loaded the first time
   useEffect(() => {
     if (chatMessages.length > 0 && !loading) {
       bottomRef.current?.scrollIntoView({ behavior: "auto" });
@@ -109,7 +135,11 @@ const Chat = ({ user, friendChat, socket }) => {
 
   // Render
   if (loading || Object.keys(friendMap).length === 0) {
-    return <div className="flex flex-col h-screen w-2/3">Loading...</div>;
+    return (
+      <div className="flex flex-col h-screen w-2/3 justify-center items-center text-gray-400 text-lg">
+        <img src={logo} alt="Select chat" className="w-50 h-auto" />
+      </div>
+    );
   }
 
   return (
@@ -124,7 +154,6 @@ const Chat = ({ user, friendChat, socket }) => {
           message.sender === user._id ? (
             <div key={message._id || `temp-${index}`} className="chat chat-end">
               <div className="chat-image avatar">
-                {/* TODO: fetch user avartar */}
                 <div className="w-10 rounded-full">
                   <img
                     alt="Tailwind CSS chat bubble component"
@@ -144,7 +173,6 @@ const Chat = ({ user, friendChat, socket }) => {
               className="chat chat-start"
             >
               <div className="chat-image avatar">
-                {/* TODO: fetch user avartar */}
                 <div className="w-10 rounded-full">
                   <img
                     alt="Tailwind CSS chat bubble component"
@@ -182,8 +210,13 @@ const Chat = ({ user, friendChat, socket }) => {
                 onSubmit();
               }
             }}
+            disabled={!socketReady}
           />
-          <button type="submit" className="btn btn-primary">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={!socketReady || !newMessage.trim()}
+          >
             Send
           </button>
         </form>

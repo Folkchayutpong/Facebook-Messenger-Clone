@@ -6,7 +6,7 @@ const SettingPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const fileInputRef = useRef(null);
-  const [file, setFile] = useState(null); // เก็บไฟล์จริงสำหรับส่งไป backend
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 

@@ -1,4 +1,5 @@
 const messageService = require("./message.service");
+const { redisCache } = require("../../config/redis");
 
 // POST /messages - ส่งข้อความใหม่
 async function createMessage(req, res) {
@@ -57,8 +58,22 @@ async function getMessages(req, res) {
         .status(400)
         .json({ success: false, error: "chatId is required" });
     }
-    //เรียก service ดึงข้อความ
+    //เรียก service ดึงข้อความจาก cache
+    const redisKey = `chat:messages:${chatId}`
+    const cached = await redisCache.lRange(redisKey, 0, -1);
+    if (cached.length > 0) {
+      console.log("used data from cache", redisKey)
+      return res.json({ success: true, messages: cached.map(JSON.parse) });
+    }
+
+    //เรียก service ดึงข้อความจาก database
     const messages = await messageService.getMessages(chatId);
+    //warmup cache คือถ้ามีการดึงจาก database ก็จะเก็บที่ดึงมาลง cache ด้วยเลย
+    if (messages.length > 0) {
+      await redisCache.rPush(redisKey, ...messages.map(JSON.stringify));
+      await redisCache.lTrim(redisKey, -50, -1);
+      await redisCache.expire(redisKey, 60 * 60 * 24); // 24 ชั่วโมง
+    }
     return res.json({ success: true, messages });
   } catch (error) {
     console.error(error);

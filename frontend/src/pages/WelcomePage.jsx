@@ -59,7 +59,7 @@ const WelcomePage = () => {
           </div>
         </div>
 
-        {/* TODO: implement interactive chat box */}
+
         <div className="flex gap-2">
           <div className="border flex items-center flex-1 rounded-lg indent-2">
             <p className="opacity-50 text-sm">type something....</p>
