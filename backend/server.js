@@ -6,7 +6,7 @@ const chatRoute = require("./modules/chat/chat.route");
 const messageRoute = require("./modules/message/message.route");
 const connectDB = require("./config/db");
 const { connectRedis } = require("./config/redis");
-const initSocket  = require("./modules/socket/index")
+const initSocket = require("./modules/socket/index");
 const { Server } = require("socket.io");
 
 const port = process.env.PORT || 5000;
@@ -20,10 +20,10 @@ app.use("/api/friend", friendRoute);
 app.use("/api/chats", chatRoute);
 app.use("/api/messages", messageRoute);
 
-
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_URL,
+    methods: ["GET", "POST"],
     credentials: true,
   },
 });

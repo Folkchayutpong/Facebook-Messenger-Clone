@@ -4,7 +4,6 @@ const utils = require("../../utils/utils");
 const { redisClient } = require("../../config/redis");
 const User = require("./user.model");
 
-
 async function register(req, res) {
   const { email, username, password } = req.body;
 
@@ -53,8 +52,8 @@ async function login(req, res) {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", //change to true if use https
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "none",
       maxAge: 60 * 60 * 1000,
     });
     res.status(200).json({ user: user });
@@ -64,7 +63,9 @@ async function login(req, res) {
 }
 async function getUserProfile(req, res) {
   try {
-    const user = await User.findById(req.user.id).select("username email avatar");
+    const user = await User.findById(req.user.id).select(
+      "username email avatar",
+    );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -87,8 +88,11 @@ async function getUserProfileById(req, res) {
 }
 
 async function uploadAvatar(req, res) {
-    try {
-    const avatarUrl = await userService.uploadAvatarService( req.user.id, req.file);
+  try {
+    const avatarUrl = await userService.uploadAvatarService(
+      req.user.id,
+      req.file,
+    );
     res.json({ avatar: avatarUrl });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -113,7 +117,10 @@ async function updateUserProfile(req, res) {
       return res.status(400).json({ message: "No data to update" });
     }
 
-    const updatedUser = userService.updateUserProfileService(req.user.id, updateFields);
+    const updatedUser = userService.updateUserProfileService(
+      req.user.id,
+      updateFields,
+    );
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
@@ -148,6 +155,5 @@ module.exports = {
   getUserProfileById,
   updateUserProfile,
   uploadAvatar,
-  searchUsers
-  
+  searchUsers,
 };
