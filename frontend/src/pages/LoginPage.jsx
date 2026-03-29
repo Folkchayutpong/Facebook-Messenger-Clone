@@ -11,18 +11,18 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`/api/user/login`, { email, password });
-      const { token } = response.data;
-      localStorage.setItem("token", token);
-  
-      socket.auth = { token };
-      socket.connect();
-  
-      navigate("/messages");
-    } catch (error) {
-      setErrorMessage(error.response?.data?.msg || "Login failed");
-    }
-  };
+      const handleLogin = async (e) => {
+        e.preventDefault();
+        try {
+          await axios.post(`/api/user/login`, { email, password }, {
+            withCredentials: true,
+          });
+      
+          navigate("/messages");
+        } catch (error) {
+          setErrorMessage(error.response?.data?.message || "Login failed");
+        }
+      };
   return (
     <div className="flex justify-center items-center h-screen">
       <div className="card bg-base-200 w-96 shadow-xl">
