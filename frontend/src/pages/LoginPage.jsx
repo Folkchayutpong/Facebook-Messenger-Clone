@@ -12,15 +12,16 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `/api/user/login`,
-        { email, password }
-      );
+      const response = await axios.post(`/api/user/login`, { email, password });
       const { token } = response.data;
       localStorage.setItem("token", token);
       socket.auth = { token };
+      console.log("Connecting to socket server with token:", token);
+      socket.once("connect", () => {
+        navigate("/messages"); // ← navigate หลัง connect สำเร็จ
+      });
+
       socket.connect();
-      navigate("/messages");
     } catch (error) {
       setErrorMessage(error.response?.data?.msg || "Login failed");
     }
