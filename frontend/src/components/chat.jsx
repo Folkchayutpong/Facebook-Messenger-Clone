@@ -107,7 +107,6 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
     }
   }, [loading]);
 
-
   if (!friendChat) {
     return (
       <div className="flex flex-col h-screen w-2/3 justify-center items-center text-gray-400 text-lg">
@@ -125,8 +124,7 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
   }
 
   const onSubmit = () => {
-    if (!newMessage.trim() || !friendChat || !user) return;
-    if (!socketReady) return;
+    if (!newMessage.trim() || !friendChat || !user || !socketReady) return;
 
     const msg = {
       chatId: friendChat._id,
@@ -209,7 +207,7 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
         >
           <input
             type="text"
-            placeholder={socketReady ? "Type your message..." : "Connecting..."}
+            placeholder="Type your message..."
             className="input input-bordered w-full"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -219,11 +217,12 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
                 onSubmit();
               }
             }}
+            disabled={!socketReady}
           />
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={!newMessage.trim()}
+            disabled={!socketReady || !newMessage.trim()}
           >
             Send
           </button>
