@@ -34,11 +34,13 @@ const MainPage = () => {
         const res = await axios.get("/api/chats", { withCredentials: true });
         setFriendChats(res.data);
         res.data.forEach((chat) => socket.emit("join_chat", chat._id));
-        setSocketReady(true);
       } catch (err) {
         console.error("Error joining chats:", err);
       }
     };
+
+    const handleSocketReady = () => setSocketReady(true);
+    const handleDisconnect = () => setSocketReady(false);
 
     const handleChatCreated = async ({ chatId }) => {
       socket.emit("join_chat", chatId);
@@ -57,25 +59,21 @@ const MainPage = () => {
       });
     };
 
-    const handleDisconnect = () => {
-      setSocketReady(false);
-    };
-
-    // ✅ register listeners ก่อน connect
-    socket.on("connect", handleConnect);
+    socket.on("connect", handleSocketReady);
+    socket.on("connect", handleConnect);     
     socket.on("chat:created", handleChatCreated);
     socket.on("chat:removed", handleChatRemoved);
     socket.on("disconnect", handleDisconnect);
 
-    // ✅ connect หลัง register
     connectSocket();
 
-    // fallback ถ้า connect ไปแล้วก่อน useEffect รัน
     if (socket.connected) {
+      handleSocketReady();
       handleConnect();
     }
 
     return () => {
+      socket.off("connect", handleSocketReady);
       socket.off("connect", handleConnect);
       socket.off("chat:created", handleChatCreated);
       socket.off("chat:removed", handleChatRemoved);
@@ -103,6 +101,13 @@ const MainPage = () => {
     return () => {
       socket.off("receive_message", handleReceiveMessage);
     };
+  }, []);
+
+ 
+  useEffect(() => {
+    axios.get("/api/chats", { withCredentials: true }).then((res) => {
+      setFriendChats(res.data);
+    });
   }, []);
 
   // Load user info
