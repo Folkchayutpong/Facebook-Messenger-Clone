@@ -122,7 +122,6 @@ const MainPage = () => {
 
   return (
     <div className="flex justify-center h-screen">
-      <Sidebar />
       <FriendChats
         friendChats={friendChats}
         onSelectFriend={handleSelectFriend}

@@ -5,6 +5,7 @@ import logo from "../assets/Friend-Chats-Logo.png";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Sidebar from "../components/sidebar";
 
 const FriendChats = ({
   friendChats,
@@ -13,7 +14,6 @@ const FriendChats = ({
   lastMessageMap,
   setLastMessageMap,
   socket,
-  setFriendChats, // ✅ เพิ่ม prop นี้
 }) => {
   const [friendNameMap, setFriendNameMap] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,7 +30,7 @@ const FriendChats = ({
             const friend = chat.members.find(
               (member) =>
                 (typeof member === "string" ? member : member._id) !==
-                curUser._id
+                curUser._id,
             );
 
             if (!friend) return [chat._id, "Unknown"];
@@ -43,7 +43,7 @@ const FriendChats = ({
             });
 
             return [chat._id, res.data.username];
-          })
+          }),
         );
 
         setFriendNameMap(Object.fromEntries(entries));
@@ -74,7 +74,7 @@ const FriendChats = ({
               } || null;
 
             return [chat._id, lastMessage];
-          })
+          }),
         );
 
         setLastMessageMap(Object.fromEntries(entries));
@@ -103,9 +103,12 @@ const FriendChats = ({
 
   return (
     <div className="bg-base-300 h-screen w-1/4 flex flex-col text-white">
-      <div className="flex items-center p-2">
-        <Avartar src={logo} />
-        <h1 className="text-xl font-bold p-2">Friend Chats</h1>
+      <div className="flex space-between">
+        <Sidebar />
+        <div className="flex items-center">
+          <Avartar src={logo} />
+          <h1 className="text-xl font-bold p-2">Friend Chats</h1>
+        </div>
       </div>
 
       <div className="p-2">
