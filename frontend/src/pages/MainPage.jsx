@@ -61,16 +61,13 @@ const MainPage = () => {
       setSocketReady(false);
     };
 
-    // ✅ register listeners ก่อน connect
     socket.on("connect", handleConnect);
     socket.on("chat:created", handleChatCreated);
     socket.on("chat:removed", handleChatRemoved);
     socket.on("disconnect", handleDisconnect);
 
-    // ✅ connect หลัง register
     connectSocket();
 
-    // fallback ถ้า connect ไปแล้วก่อน useEffect รัน
     if (socket.connected) {
       handleConnect();
     }
