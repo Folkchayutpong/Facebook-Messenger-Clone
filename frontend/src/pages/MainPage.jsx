@@ -28,7 +28,6 @@ const MainPage = () => {
   // Initialize socket
   useEffect(() => {
     socketRef.current = socket;
-    connectSocket();
 
     const handleConnect = async () => {
       try {
@@ -59,15 +58,19 @@ const MainPage = () => {
     };
 
     const handleDisconnect = () => {
-      console.log("Socket disconnected");
       setSocketReady(false);
     };
 
+    // ✅ register listeners ก่อน connect
     socket.on("connect", handleConnect);
     socket.on("chat:created", handleChatCreated);
     socket.on("chat:removed", handleChatRemoved);
     socket.on("disconnect", handleDisconnect);
 
+    // ✅ connect หลัง register
+    connectSocket();
+
+    // fallback ถ้า connect ไปแล้วก่อน useEffect รัน
     if (socket.connected) {
       handleConnect();
     }
@@ -102,13 +105,6 @@ const MainPage = () => {
     };
   }, []);
 
-  // Load friend chats
-  useEffect(() => {
-    axios.get("/api/chats", { withCredentials: true }).then((res) => {
-      setFriendChats(res.data);
-    });
-  }, []);
-
   // Load user info
   useEffect(() => {
     axios.get("/api/user/profile", { withCredentials: true }).then((res) => {
@@ -121,7 +117,7 @@ const MainPage = () => {
   };
 
   return (
-    <div className="flex justify-center h-screen">
+    <div className="flex h-screen w-full">
       <FriendChats
         friendChats={friendChats}
         onSelectFriend={handleSelectFriend}
