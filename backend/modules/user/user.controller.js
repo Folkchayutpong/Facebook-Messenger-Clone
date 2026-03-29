@@ -56,7 +56,7 @@ async function login(req, res) {
       sameSite: "none",
       maxAge: 60 * 60 * 1000,
     });
-    res.status(200).json({ user: user });
+    res.status(200).json({ user, token });
   } catch (error) {
     res.status(401).json({ message: error.message });
   }
