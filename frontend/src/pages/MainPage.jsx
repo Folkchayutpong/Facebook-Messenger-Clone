@@ -19,7 +19,7 @@ const MainPage = () => {
   useEffect(() => {
     socketRef.current = socket;
 
-    socket.on("connect", async () => {
+    const handleConnect = async () => {
       try {
         const res = await axios.get("/api/chats", { withCredentials: true });
         res.data.forEach((chat) => socket.emit("join_chat", chat._id));
@@ -27,35 +27,41 @@ const MainPage = () => {
       } catch (err) {
         console.error("Error joining chats:", err);
       }
-    });
+    };
 
-    socket.on("chat:created", async ({ chatId }) => {
+    const handleChatCreated = async ({ chatId }) => {
       socket.emit("join_chat", chatId);
-
-      // Refresh chat list
       const res = await axios.get("/api/chats", { withCredentials: true });
       setFriendChats(res.data);
-    });
+    };
 
-    socket.on("chat:removed", ({ chatId }) => {
-
+    const handleChatRemoved = ({ chatId }) => {
       setFriendChats((prev) => prev.filter((chat) => chat._id !== chatId));
-
       setSelectedFriend((current) =>
-        current?._id === chatId ? null : current
+        current?._id === chatId ? null : current,
       );
-    });
+    };
 
-    socket.on("disconnect", () => {
+    const handleDisconnect = () => {
       console.log("Socket disconnected");
       setSocketReady(false);
-    });
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("chat:created", handleChatCreated);
+    socket.on("chat:removed", handleChatRemoved);
+    socket.on("disconnect", handleDisconnect);
+
+    // ถ้า connect แล้วก่อน useEffect รัน
+    if (socket.connected) {
+      handleConnect();
+    }
 
     return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("chat:created");
-      socket.off("chat:removed");
+      socket.off("connect", handleConnect);
+      socket.off("chat:created", handleChatCreated);
+      socket.off("chat:removed", handleChatRemoved);
+      socket.off("disconnect", handleDisconnect);
     };
   }, []);
 
