@@ -1,6 +1,5 @@
 import FriendChats from "../components/friend_chats";
 import RightPanel from "../components/Right_panel";
-import Sidebar from "../components/sidebar";
 import Chat from "../components/chat";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
@@ -18,6 +17,7 @@ const MainPage = () => {
   const socketRef = useRef(null);
   const navigate = useNavigate();
 
+
   useEffect(() => {
     if (removedChatId) {
       navigate("/messages");
@@ -25,45 +25,37 @@ const MainPage = () => {
     }
   }, [removedChatId]);
 
-  // Initialize socket
+
   useEffect(() => {
+    axios
+      .get("/api/user/profile", { withCredentials: true })
+      .then((res) => {
+        console.log("user loaded", res.data);
+        setCurUser(res.data);
+      })
+      .catch(() => {
+        console.log("not authenticated");
+        setCurUser(null);
+      });
+  }, []);
+
+
+  useEffect(() => {
+    if (!curUser) return;
+
     socketRef.current = socket;
 
-    const handleConnect = async () => {
-      try {
-        const res = await axios.get("/api/chats", { withCredentials: true });
-        setFriendChats(res.data);
-        res.data.forEach((chat) => socket.emit("join_chat", chat._id));
-        setSocketReady(true);
-      } catch (err) {
-        console.error("Error joining chats:", err);
-      }
-    };
-
-    const handleChatCreated = async ({ chatId }) => {
-      socket.emit("join_chat", chatId);
-      const res = await axios.get("/api/chats", { withCredentials: true });
-      setFriendChats(res.data);
-    };
-
-    const handleChatRemoved = ({ chatId }) => {
-      setFriendChats((prev) => prev.filter((chat) => chat._id !== chatId));
-      setSelectedFriend((current) => {
-        if (current?._id === chatId) {
-          setRemovedChatId(chatId);
-          return null;
-        }
-        return current;
-      });
+    const handleConnect = () => {
+      console.log("socket connected:", socket.id);
+      setSocketReady(true);
     };
 
     const handleDisconnect = () => {
+      console.log("socket disconnected");
       setSocketReady(false);
     };
 
     socket.on("connect", handleConnect);
-    socket.on("chat:created", handleChatCreated);
-    socket.on("chat:removed", handleChatRemoved);
     socket.on("disconnect", handleDisconnect);
 
     connectSocket();
@@ -74,16 +66,76 @@ const MainPage = () => {
 
     return () => {
       socket.off("connect", handleConnect);
-      socket.off("chat:created", handleChatCreated);
-      socket.off("chat:removed", handleChatRemoved);
       socket.off("disconnect", handleDisconnect);
     };
-  }, []);
+  }, [curUser]);
 
-  // Listen for new messages
+
   useEffect(() => {
-    const socket = socketRef.current;
-    if (!socket) return;
+    if (!curUser) return;
+
+    axios
+      .get("/api/chats", { withCredentials: true })
+      .then((res) => {
+        console.log("chats loaded", res.data);
+        setFriendChats(res.data);
+      })
+      .catch((err) => {
+        console.error("load chats error", err);
+      });
+  }, [curUser]);
+
+
+  useEffect(() => {
+    if (!socketReady) return;
+    if (friendChats.length === 0) return;
+
+    friendChats.forEach((chat) => {
+      console.log("joining chat:", chat._id);
+      socket.emit("join_chat", chat._id);
+    });
+  }, [socketReady, friendChats]);
+
+  useEffect(() => {
+    const s = socketRef.current;
+    if (!s) return;
+
+    const handleChatCreated = async ({ chatId }) => {
+      console.log("🆕 chat created:", chatId);
+      s.emit("join_chat", chatId);
+
+      const res = await axios.get("/api/chats", {
+        withCredentials: true,
+      });
+      setFriendChats(res.data);
+    };
+
+    const handleChatRemoved = ({ chatId }) => {
+      console.log("🗑 chat removed:", chatId);
+
+      setFriendChats((prev) => prev.filter((chat) => chat._id !== chatId));
+
+      setSelectedFriend((current) => {
+        if (current?._id === chatId) {
+          setRemovedChatId(chatId);
+          return null;
+        }
+        return current;
+      });
+    };
+
+    s.on("chat:created", handleChatCreated);
+    s.on("chat:removed", handleChatRemoved);
+
+    return () => {
+      s.off("chat:created", handleChatCreated);
+      s.off("chat:removed", handleChatRemoved);
+    };
+  }, [socketReady]);
+
+  useEffect(() => {
+    const s = socketRef.current;
+    if (!s) return;
 
     const handleReceiveMessage = (message) => {
       setLastMessageMap((prev) => ({
@@ -95,21 +147,14 @@ const MainPage = () => {
       }));
     };
 
-    socket.on("receive_message", handleReceiveMessage);
+    s.on("receive_message", handleReceiveMessage);
 
     return () => {
-      socket.off("receive_message", handleReceiveMessage);
+      s.off("receive_message", handleReceiveMessage);
     };
   }, []);
 
-  // Load user info
-  useEffect(() => {
-    axios.get("/api/user/profile", { withCredentials: true }).then((res) => {
-      setCurUser(res.data);
-    });
-  }, []);
-
-  const handleSelectFriend = async (chat) => {
+  const handleSelectFriend = (chat) => {
     setSelectedFriend(chat);
   };
 
