@@ -11,16 +11,13 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`/api/user/login`, { email, password });
-      const { token } = response.data;
-      localStorage.setItem("token", token);
-  
-      socket.auth = { token };
-      socket.connect();
+      await axios.post(`/api/user/login`, { email, password }, {
+        withCredentials: true, 
+      });
   
       navigate("/messages");
     } catch (error) {
-      setErrorMessage(error.response?.data?.msg || "Login failed");
+      setErrorMessage(error.response?.data?.message || "Login failed");
     }
   };
   return (
