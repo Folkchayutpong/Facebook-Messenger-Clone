@@ -93,12 +93,10 @@ const FriendChats = ({
 
   function handleLogout() {
     localStorage.removeItem("token");
-
+    navigate("/login");
     if (socket) {
       socket.disconnect();
     }
-
-    navigate("/login");
   }
 
   return (
