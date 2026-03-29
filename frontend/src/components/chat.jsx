@@ -43,17 +43,17 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
           memberIds.map((member) =>
             axios.get(`/api/user/profile/${member._id || member}`, {
               withCredentials: true,
-            })
-          )
+            }),
+          ),
         );
 
         const memberProfiles = memberResponses.map((res) => res.data);
         const friendOnly = memberProfiles.filter(
-          (profile) => profile._id !== user._id
+          (profile) => profile._id !== user._id,
         );
 
         const map = Object.fromEntries(
-          friendOnly.map((profile) => [profile._id, profile.username])
+          friendOnly.map((profile) => [profile._id, profile.username]),
         );
 
         setFriendMap(map);
@@ -67,32 +67,6 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
     fetchData();
   }, [friendChat?._id, user?._id]);
 
-  const onSubmit = () => {
-    if (!newMessage.trim() || !friendChat || !user || !socketReady) return;
-
-    const msg = {
-      chatId: friendChat._id,
-      content: newMessage,
-    };
-
-    const tempMessage = {
-      _id: `temp-${Date.now()}`,
-      chatId: friendChat._id,
-      content: newMessage,
-      sender: user._id,
-      senderName: user.username,
-      messageType: "text",
-      sentAt: new Date().toLocaleTimeString("th-TH", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setChatMessages((prev) => [...prev, tempMessage]);
-    socket.emit("send_message", msg);
-    setNewMessage("");
-  };
-
   // Listen for new messages
   useEffect(() => {
     if (!socket) return;
@@ -105,7 +79,7 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
                 m._id.toString().startsWith("temp-") &&
                 m.content === msg.content &&
                 m.sender === msg.sender
-              )
+              ),
           );
 
           const exists = filteredPrev.some((m) => m._id === msg._id);
@@ -133,7 +107,14 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
     }
   }, [loading]);
 
-  // Render
+  if (!friendChat) {
+    return (
+      <div className="flex flex-col h-screen w-2/3 justify-center items-center text-gray-400 text-lg">
+        <img src={logo} alt="Select chat" className="w-50 h-auto" />
+      </div>
+    );
+  }
+
   if (loading || Object.keys(friendMap).length === 0) {
     return (
       <div className="flex flex-col h-screen w-2/3 justify-center items-center text-gray-400 text-lg">
@@ -141,6 +122,32 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
       </div>
     );
   }
+
+  const onSubmit = () => {
+    if (!newMessage.trim() || !friendChat || !user || !socketReady) return;
+
+    const msg = {
+      chatId: friendChat._id,
+      content: newMessage,
+    };
+
+    const tempMessage = {
+      _id: `temp-${Date.now()}`,
+      chatId: friendChat._id,
+      content: newMessage,
+      sender: user._id,
+      senderName: user.username,
+      messageType: "text",
+      sentAt: new Date().toLocaleTimeString("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setChatMessages((prev) => [...prev, tempMessage]);
+    socket.emit("send_message", msg);
+    setNewMessage("");
+  };
 
   return (
     <div className="flex flex-col h-screen w-2/3">
@@ -186,7 +193,7 @@ const Chat = ({ user, friendChat, socket, socketReady }) => {
               </div>
               <div className="chat-bubble">{message.content}</div>
             </div>
-          )
+          ),
         )}
         <div ref={bottomRef} />
       </div>

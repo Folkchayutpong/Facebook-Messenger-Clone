@@ -11,22 +11,17 @@ function initSocket(io) {
 
   // connecntion event
   io.on("connection", (socket) => {
-    console.log("New socket connected:", socket.user.username);
-
     const userId = socket.user._id.toString();
     socket.join(`user:${userId}`);
-    console.log(`User ${userId} joined room: user:${userId}`);
 
     socket.on("join_chat", (chatId) => {
       socket.join(chatId);
-      console.log(`User ${socket.user.username} joined chat ${chatId}`);
     });
 
     // send message event
     socket.on("send_message", async (msg) => {
       try {
         const now = new Date();
-        console.log("Sending message at:", now);
 
         const newMessage = await Message.create({
           chatId: msg.chatId,
@@ -42,7 +37,6 @@ function initSocket(io) {
         await redisCache.rPush(redisKey, JSON.stringify(newMessage));
         await redisCache.expire(redisKey, 60 * 60 * 24); // 1 days expire
         await redisCache.lTrim(redisKey, -50, -1); //50 mnessages
-        console.log("Cached message to redis:", redisKey);
 
         // receive message event
         io.to(msg.chatId).emit("receive_message", {
@@ -55,16 +49,13 @@ function initSocket(io) {
           sentAt: newMessage.sentAt,
         });
       } catch (err) {
-        console.error("Error sending message:", err.message);
         socket.emit("message_error", {
           error: "Failed to send message",
           details: err.message,
         });
       }
     });
-    socket.on("disconnect", () => {
-      console.log("🔌 Socket disconnected:", socket.user.username);
-    });
+    socket.on("disconnect", () => {});
   });
 
   return io;

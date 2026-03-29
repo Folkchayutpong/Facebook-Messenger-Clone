@@ -6,7 +6,7 @@ const SettingButton = () => {
   return (
     <button
       onClick={() => navigate("/setting")}
-      className="btn btn-circle text-3xl"
+      className="btn btn-circle text-3xl m-3"
       title="Settings"
     >
       ⚙️
