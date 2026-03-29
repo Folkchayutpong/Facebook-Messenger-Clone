@@ -31,11 +31,17 @@ const io = new Server(server, {
 app.set("io", io);
 
 //start server
-server.listen(port, async () => {
+const start = async () => {
   await connectDB();
   await connectRedis();
   initSocket(io);
-  console.log(`Server is running on port ${port}`);
-});
+
+  server.listen(port, () => {
+    const url = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+    console.log(`🙆‍♂️ Server is running on ${url}`);
+  });
+};
+
+start();
 
 module.exports = server;

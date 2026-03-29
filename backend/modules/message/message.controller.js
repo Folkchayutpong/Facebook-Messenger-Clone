@@ -59,10 +59,9 @@ async function getMessages(req, res) {
         .json({ success: false, error: "chatId is required" });
     }
     //เรียก service ดึงข้อความจาก cache
-    const redisKey = `chat:messages:${chatId}`
+    const redisKey = `chat:messages:${chatId}`;
     const cached = await redisCache.lRange(redisKey, 0, -1);
     if (cached.length > 0) {
-      console.log("used data from cache", redisKey)
       return res.json({ success: true, messages: cached.map(JSON.parse) });
     }
 

@@ -4,7 +4,8 @@ import Sidebar from "../components/sidebar";
 import Chat from "../components/chat";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { socket } from "../socket";
+import { socket, connectSocket } from "../socket";
+import { useNavigate } from "react-router-dom";
 
 const MainPage = () => {
   const [friendChats, setFriendChats] = useState([]);
@@ -13,15 +14,26 @@ const MainPage = () => {
   const [lastMessageMap, setLastMessageMap] = useState({});
   const [socketReady, setSocketReady] = useState(false);
   const [showAddFriend, setShowAddFriend] = useState(false);
+  const [removedChatId, setRemovedChatId] = useState(null);
   const socketRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (removedChatId) {
+      navigate("/messages");
+      setRemovedChatId(null);
+    }
+  }, [removedChatId]);
 
   // Initialize socket
   useEffect(() => {
     socketRef.current = socket;
+    connectSocket();
 
     const handleConnect = async () => {
       try {
         const res = await axios.get("/api/chats", { withCredentials: true });
+        setFriendChats(res.data);
         res.data.forEach((chat) => socket.emit("join_chat", chat._id));
         setSocketReady(true);
       } catch (err) {
@@ -37,9 +49,13 @@ const MainPage = () => {
 
     const handleChatRemoved = ({ chatId }) => {
       setFriendChats((prev) => prev.filter((chat) => chat._id !== chatId));
-      setSelectedFriend((current) =>
-        current?._id === chatId ? null : current,
-      );
+      setSelectedFriend((current) => {
+        if (current?._id === chatId) {
+          setRemovedChatId(chatId);
+          return null;
+        }
+        return current;
+      });
     };
 
     const handleDisconnect = () => {
@@ -52,7 +68,6 @@ const MainPage = () => {
     socket.on("chat:removed", handleChatRemoved);
     socket.on("disconnect", handleDisconnect);
 
-    // ถ้า connect แล้วก่อน useEffect รัน
     if (socket.connected) {
       handleConnect();
     }
@@ -101,7 +116,6 @@ const MainPage = () => {
     });
   }, []);
 
-  // Handle chat selection
   const handleSelectFriend = async (chat) => {
     setSelectedFriend(chat);
   };

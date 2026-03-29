@@ -15,10 +15,10 @@ const connectRedis = async () => {
     if (!redisClient.isOpen) {
       await redisClient.connect();
       await redisCache.connect();
-      console.log("Redis client connected successfully");
+      console.log("🔴 Redis client connected successfully");
     }
   } catch (err) {
-    console.log(err);
+    console.log("🔴 Redis client connection error:", err);
   }
 };
 
