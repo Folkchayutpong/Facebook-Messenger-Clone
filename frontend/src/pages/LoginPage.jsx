@@ -17,7 +17,7 @@ const LoginPage = () => {
       localStorage.setItem("token", token);
       socket.auth = { token };
       socket.once("connect", () => {
-        navigate("/messages"); // ← navigate หลัง connect สำเร็จ
+        navigate("/messages"); 
       });
 
       socket.connect();
